@@ -197,7 +197,7 @@ $CONFIG->checkIfAuthenticated(true);
             height: 0;
             width: 100%;
             position: fixed;
-            z-index: 1;
+            z-index: 15;
             bottom: 0;
             left: 0;
             background-color: rgb(0, 0, 0);
