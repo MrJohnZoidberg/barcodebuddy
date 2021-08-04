@@ -71,7 +71,7 @@ $CONFIG->checkIfAuthenticated(true);
 
         .header {
             width: 100%;
-            background: #ccc;
+            background: #ada47a;
             padding: 10px;
             box-sizing: border-box;
             flex: 0 1 auto;
@@ -169,7 +169,7 @@ $CONFIG->checkIfAuthenticated(true);
         }
 
         .bottom-button {
-            background-color: #5a97aa;
+            background-color: #497C8D;
             color: white;
             padding: 1em 2em;
             border: none;

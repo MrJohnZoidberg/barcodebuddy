@@ -335,7 +335,7 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
         if (!$db->isUnknownBarcodeAlreadyStored($barcode))
             $db->insertActionRequiredBarcode($barcode, $bestBeforeInDays, $price);
         $fileLock->removeLock();
-        $log = new LogOutput("Action required: Enter weight for " . $productInfo->name, EVENT_TYPE_ACTION_REQUIRED, $barcode);
+        $log = new LogOutput("Aktion erforderlich: Gewicht für " . $productInfo->name . " eingeben", EVENT_TYPE_ACTION_REQUIRED, $barcode);
         return $log->setWebsocketResultCode(WS_RESULT_PRODUCT_FOUND)->createLog();
     }
 
@@ -349,7 +349,7 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
             if ($productInfo->stockAmount > 0) {
                 if ($productInfo->stockAmount < $amountToConsume)
                     $amountToConsume = $productInfo->stockAmount;
-                $log    = new LogOutput("Consuming " . $amountToConsume . " " . $productInfo->unit . " of " . $productInfo->name, EVENT_TYPE_ADD_KNOWN_BARCODE, $barcode);
+                $log    = new LogOutput($amountToConsume . " " . $productInfo->unit . " " . $productInfo->name . " aus dem Bestand entfernt", EVENT_TYPE_ADD_KNOWN_BARCODE, $barcode);
                 $output = $log
                     ->addStockToText($productInfo->stockAmount - $amountToConsume)
                     ->setWebsocketResultCode(WS_RESULT_PRODUCT_FOUND)
@@ -369,7 +369,7 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
         case STATE_CONSUME_ALL:
             $amountToConsume = $productInfo->stockAmount;
             if ($productInfo->stockAmount > 0) {
-                $log    = new LogOutput("Consuming all" . $amountToConsume . " " . $productInfo->unit . " of " . $productInfo->name, EVENT_TYPE_ADD_KNOWN_BARCODE, $barcode);
+                $log    = new LogOutput("Alle " . $amountToConsume . " " . $productInfo->unit . " " . $productInfo->name . " aus dem Bestand entfernt", EVENT_TYPE_ADD_KNOWN_BARCODE, $barcode);
                 $output = $log
                     ->setWebsocketResultCode(WS_RESULT_PRODUCT_FOUND)
                     ->addProductFoundText()
@@ -384,14 +384,14 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
                     ->createLog();
             }
             if ($config["REVERT_SINGLE"]) {
-                $db->saveLog("Reverting back to Consume", true);
+                $db->saveLog("Kehre zu Verbrauchen zurück", true);
                 $db->setTransactionState(STATE_CONSUME);
             }
             $fileLock->removeLock();
             return $output;
         case STATE_CONSUME_SPOILED:
             if ($productInfo->stockAmount > 0) {
-                $log    = new LogOutput("Consuming 1 spoiled " . $productInfo->unit . " of " . $productInfo->name, EVENT_TYPE_ADD_KNOWN_BARCODE, $barcode);
+                $log    = new LogOutput("1 " . $productInfo->unit . " " . $productInfo->name . " als verdorben verbraucht", EVENT_TYPE_ADD_KNOWN_BARCODE, $barcode);
                 $output = $log
                     ->addStockToText($productInfo->stockAmount - 1)
                     ->setWebsocketResultCode(WS_RESULT_PRODUCT_FOUND)
@@ -407,7 +407,7 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
             }
             $fileLock->removeLock();
             if ($config["REVERT_SINGLE"]) {
-                $db->saveLog("Reverting back to Consume", true);
+                $db->saveLog("Kehre zu Verbrauchen zurück", true);
                 $db->setTransactionState(STATE_CONSUME);
             }
             return $output;
@@ -420,7 +420,7 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
             } else {
                 $additionalLog = "";
             }
-            $log    = new LogOutput("Adding  $amount " . $productInfo->unit . " of " . $productInfo->name . $additionalLog, EVENT_TYPE_ADD_KNOWN_BARCODE, $barcode, $isWarning);
+            $log    = new LogOutput($amount . " " . $productInfo->unit . " " . $productInfo->name . " dem Bestand hinzugefügt" . $additionalLog, EVENT_TYPE_ADD_KNOWN_BARCODE, $barcode, $isWarning);
             $output = $log
                 ->addStockToText($productInfo->stockAmount + $amount)
                 ->setWebsocketResultCode(WS_RESULT_PRODUCT_FOUND)
@@ -431,7 +431,7 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
             return $output;
         case STATE_OPEN:
             if ($productInfo->stockAmount > 0) {
-                $log    = new LogOutput("Opening 1 " . $productInfo->unit . " of " . $productInfo->name, EVENT_TYPE_ADD_KNOWN_BARCODE, $barcode);
+                $log    = new LogOutput("1 " . $productInfo->unit . " " . $productInfo->name . " als geöffnet markiert", EVENT_TYPE_ADD_KNOWN_BARCODE, $barcode);
                 $output = $log
                     ->addStockToText($productInfo->stockAmount)
                     ->setWebsocketResultCode(WS_RESULT_PRODUCT_FOUND)
@@ -447,23 +447,23 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
             }
             $fileLock->removeLock();
             if ($config["REVERT_SINGLE"]) {
-                $db->saveLog("Reverting back to Consume", true);
+                $db->saveLog("Kehre zu Verbrauchen zurück", true);
                 $db->setTransactionState(STATE_CONSUME);
             }
             return $output;
         case STATE_GETSTOCK:
             $fileLock->removeLock();
-            $log = "Currently in stock: " . $productInfo->stockAmount . " " . $productInfo->unit . " of " . $productInfo->name;
+            $log = "Aktuell im Bestand: " . $productInfo->stockAmount . " " . $productInfo->unit . " " . $productInfo->name;
             if ($productInfo->stockAmount > 0) {
                 $locationInfo = API::getProductLocations($productInfo->id);
                 foreach ($locationInfo as $location) {
-                    $log = $log . "\nLocation " . $location["location_name"] . ": " . $location["amount"] . " " . $productInfo->unit;
+                    $log = $log . "\nStandort " . $location["location_name"] . ": " . $location["amount"] . " " . $productInfo->unit;
                 }
             }
             return (new LogOutput($log, EVENT_TYPE_ADD_KNOWN_BARCODE))->createLog();
         case STATE_ADD_SL:
             $fileLock->removeLock();
-            $output = (new LogOutput("Added to shopping list: 1 " . $productInfo->unit . " of " . $productInfo->name, EVENT_TYPE_ADD_KNOWN_BARCODE))->createLog();
+            $output = (new LogOutput("1 " . $productInfo->unit . " " . $productInfo->name . " zur Einkaufsliste hinzugefügt", EVENT_TYPE_ADD_KNOWN_BARCODE))->createLog();
             API::addToShoppinglist($productInfo->id, 1);
             return $output;
         default:
