@@ -74,7 +74,6 @@ $CONFIG->checkIfAuthenticated(true);
             background: #ccc;
             padding: 10px;
             box-sizing: border-box;
-            text-transform: lowercase;
             flex: 0 1 auto;
         }
 
@@ -275,22 +274,17 @@ $CONFIG->checkIfAuthenticated(true);
 <div id="soundbuttondiv">
     <button class="bottom-button" onclick="toggleSound()" id="soundbutton"><img class="bottom-img"
                                                                                 src="incl/img/mute.svg"
-                                                                                alt="Toggle sound and wakelock">
-    </button>
-</div>
-<div id="backbuttondiv">
-    <button class="bottom-button" onclick="goHome()" id="backbutton"><img class="bottom-img" src="incl/img/back.svg"
-                                                                          alt="Go back to overview">
+                                                                                alt="Sound an-/ausschalten">
     </button>
 </div>
 <div id="selectbuttondiv">
     <button class="bottom-button" onclick="openNav()" id="selectbutton"><img class="bottom-img" src="incl/img/list.svg"
-                                                                             alt="Set mode">
+                                                                             alt="Modus auswählen">
     </button>
 </div>
 <div id="fullscreenbuttondiv">
     <button class="bottom-button" onclick="toggleFullscreen()" id="fullscreenbutton"><img class="bottom-img" src="incl/img/fullscreen.svg"
-                                                                             alt="Toggle fullscreen">
+                                                                             alt="Vollbild an-/ausschalten">
     </button>
 </div>
 
@@ -298,14 +292,14 @@ $CONFIG->checkIfAuthenticated(true);
 <div id="myNav" class="overlay">
     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
     <div class="overlay-content">
-        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_P"] ?>')">Purchase</a>
-        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_C"] ?>')">Consume</a>
-        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_O"] ?>')">Open</a>
-        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_GS"] ?>')">Inventory</a>
-        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_AS"] ?>')">Add to shoppinglist</a>
-        <a href="#" onclick="sendQuantity()">Set quantity</a>
-        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_CA"] ?>')">Consume All</a>
-        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_CS"] ?>')">Consume (spoiled)</a>
+        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_P"] ?>')">Einkaufen</a>
+        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_C"] ?>')">Verbrauchen</a>
+        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_O"] ?>')">Öffnen</a>
+        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_GS"] ?>')">Inventur</a>
+        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_AS"] ?>')">Zur Einkaufsliste hinzufügen</a>
+        <a href="#" onclick="sendQuantity()">Menge festlegen</a>
+        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_CA"] ?>')">Alle verbrauchen</a>
+        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_CS"] ?>')">Als verdorben verbrauchen</a>
     </div>
 </div>
 
@@ -389,13 +383,13 @@ $CONFIG->checkIfAuthenticated(true);
         source.addEventListener("error", function (event) {
             switch (event.target.readyState) {
                 case EventSource.CONNECTING:
-                    document.getElementById('grocy-sse').textContent = 'Reconnecting...';
+                    document.getElementById('grocy-sse').textContent = 'Neuverbinden...';
                     // console.log('Reconnecting...');
                     connectFailCounter++
                     if (connectFailCounter === 100) {
                         source.close();
-                        document.getElementById('grocy-sse').textContent = 'Unavailable';
-                        document.getElementById('scan-result').textContent = 'Unable to connect to Barcode Buddy';
+                        document.getElementById('grocy-sse').textContent = 'Nicht verfügbar';
+                        document.getElementById('scan-result').textContent = 'Verbindung mit Barcode Buddy fehlgeschlagen';
                     }
                     break;
                 case EventSource.CLOSED:
@@ -406,9 +400,9 @@ $CONFIG->checkIfAuthenticated(true);
 
         async function resetScan(scanId) {
             await sleep(3000);
-            if (currentScanId == scanId) {
+            if (currentScanId === scanId) {
                 document.getElementById('content').style.backgroundColor = '#eee';
-                document.getElementById('scan-result').textContent = 'waiting for barcode...';
+                document.getElementById('scan-result').textContent = 'Warte auf Barcode...';
                 document.getElementById('event').textContent = '';
             }
         }
@@ -428,10 +422,10 @@ $CONFIG->checkIfAuthenticated(true);
         }
 
         source.onopen = function () {
-            document.getElementById('grocy-sse').textContent = 'Connected';
+            document.getElementById('grocy-sse').textContent = 'Verbunden';
             if (isFirstStart) {
                 isFirstStart = false;
-                document.getElementById('scan-result').textContent = 'waiting for barcode...';
+                document.getElementById('scan-result').textContent = 'Warte auf Barcode...';
                 var http = new XMLHttpRequest();
                 http.open("GET", "incl/sse/sse_data.php?getState");
                 http.send();
@@ -447,17 +441,17 @@ $CONFIG->checkIfAuthenticated(true);
                     resultScan("#789f8a", "", he.decode(resultText), "beep_success");
                     break;
                 case '1':
-                    resultScan("#60837a", "Barcode Looked Up", he.decode(resultText), "beep_success");
+                    resultScan("#60837a", "Barcode erfolgreich nachgeschaut", he.decode(resultText), "beep_success");
                     break;
                 case '2':
-                    resultScan("#deb853", "Unknown Barcode", resultText, "beep_nosuccess");
+                    resultScan("#deb853", "Unbekannter Barcode", resultText, "beep_nosuccess");
                     break;
                 case '4':
                     document.getElementById('mode').textContent = resultText;
                     break;
                 case 'E':
                     document.getElementById('content').style.backgroundColor = '#e06a4e';
-                    document.getElementById('grocy-sse').textContent = 'disconnected';
+                    document.getElementById('grocy-sse').textContent = 'Getrennt';
                     document.getElementById('scan-result').style.display = 'none'
                     document.getElementById('previous-events').style.display = 'none'
                     document.getElementById('event').setAttribute('style', 'white-space: pre;');
@@ -467,8 +461,8 @@ $CONFIG->checkIfAuthenticated(true);
         };
     } else {
         document.getElementById('content').style.backgroundColor = '#e06a4e';
-        document.getElementById('grocy-sse').textContent = 'Disconnected';
-        document.getElementById('event').textContent = 'Sorry, your browser does not support server-sent events';
+        document.getElementById('grocy-sse').textContent = 'Getrennt';
+        document.getElementById('event').textContent = 'Entschuldigung, Ihr Browser unterstützt keine Server-Sent Events';
     }
 </script>
 
