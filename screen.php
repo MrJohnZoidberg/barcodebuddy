@@ -172,8 +172,9 @@ $CONFIG->checkIfAuthenticated(true);
             background-color: #5a97aa;
             color: white;
             padding: 1em 2em;
-            border-radius: 5px;
-            border-color: #5a97aa;
+            border: none;
+            border-radius: 3px;
+            box-shadow: 0 1px 6px rgba(57, 63, 72, 0.5);
         }
 
         .bottom-img {
