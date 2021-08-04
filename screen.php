@@ -75,6 +75,9 @@ $CONFIG->checkIfAuthenticated(true);
             padding: 10px;
             box-sizing: border-box;
             flex: 0 1 auto;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 3px 5px rgba(57, 63, 72, 0.3);
         }
 
         .content {
@@ -252,17 +255,16 @@ $CONFIG->checkIfAuthenticated(true);
 <div class="main-container">
     <div id="header" class="header">
     <span class="hdr-right h4">
-      Status: <span id="grocy-sse">Connecting...</span><br>
+      Status: <span id="grocy-sse">Verbinden...</span><br>
     </span>
         <span id="mode" class="h1 hdr-left"></span>
     </div>
     <div id="content" class="content">
-        <p id="scan-result" class="h2">If you see this for more than a couple of seconds, please check if the websocket
-            server has been started and is available</p>
+        <p id="scan-result" class="h2">Wenn Sie das hier länger als ein paar Sekunden lesen, prüfen Sie bitte, ob der Websocket-Server richtig gestartet wurde und läuft.</p>
         <div id="log">
             <p id="event" class="h3"></p><br>
             <div id="previous-events">
-                <p class="h4 p-t10"> previous scans: </p>
+                <p class="h4 p-t10"> Letzte Scans: </p>
                 <span id="log-entries" class="h5"></span>
             </div>
         </div>
@@ -272,7 +274,7 @@ $CONFIG->checkIfAuthenticated(true);
 <audio id="beep_success" src="incl/websocket/beep.ogg" type="audio/ogg" preload="auto"></audio>
 <audio id="beep_nosuccess" src="incl/websocket/buzzer.ogg" type="audio/ogg" preload="auto"></audio>
 <div id="soundbuttondiv">
-    <button class="bottom-button" onclick="toggleSound()" id="soundbutton"><img class="bottom-img"
+    <button class="bottom-button" onclick="toggleSound()" id="soundbutton"><img class="bottom-img" id="muteimg"
                                                                                 src="incl/img/mute.svg"
                                                                                 alt="Sound an-/ausschalten">
     </button>

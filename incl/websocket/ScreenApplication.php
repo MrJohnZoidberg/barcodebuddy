@@ -32,9 +32,9 @@ use Bloatless\WebSocket\Connection;
 class ScreenApplication extends Application {
 
     // current mode is stored
-    private $currentBBMode = "Consume";
+    private $currentBBMode = "Verbrauchen";
     //Only these modes are allowed as input
-    private $allowedModes = array("Consume", "Consume (spoiled)", "Purchase", "Open", "Inventory", "Quantity", "Add to shoppinglist");
+    private $allowedModes = array("Verbrauchen", "Verbrauchen (verdorben)", "Einkaufen", "Öffnen", "Inventur", "Menge", "Zur Einkaufsliste hinzufügen");
 
     /**
      * @var array $clients
