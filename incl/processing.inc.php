@@ -100,28 +100,28 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
 }
 
 function createLogModeChange(int $state): string {
-    $text = "Set state to ";
+    $text = "Umschalten auf  ";
     switch ($state) {
         case STATE_CONSUME:
-            $text .= "Consume";
+            $text .= "Verbrauchen";
             break;
         case STATE_CONSUME_SPOILED:
-            $text .= "Consume (spoiled)";
+            $text .= "Verbrauchen (verdorben)";
             break;
         case STATE_PURCHASE:
-            $text .= "Purchase";
+            $text .= "Einkaufen";
             break;
         case STATE_OPEN:
-            $text .= "Open";
+            $text .= "Öffnen";
             break;
         case STATE_GETSTOCK:
-            $text .= "Inventory";
+            $text .= "Inventur";
             break;
         case STATE_ADD_SL:
-            $text .= "Shopping List";
+            $text .= "Einkaufsliste";
             break;
         case STATE_CONSUME_ALL:
-            $text .= "Consume all";
+            $text .= "Alle verbrauchen";
             break;
         default:
             throw new Exception("Invalid state");
@@ -236,13 +236,13 @@ function processUnknownBarcode(string $barcode, bool $websocketEnabled, LockGene
  */
 function stateToString(int $state): string {
     $allowedModes = array(
-        STATE_CONSUME         => "Consume",
-        STATE_CONSUME_SPOILED => "Consume (spoiled)",
-        STATE_CONSUME_ALL     => "Consume (all)",
-        STATE_PURCHASE        => "Purchase",
-        STATE_OPEN            => "Open",
-        STATE_GETSTOCK        => "Inventory",
-        STATE_ADD_SL          => "Add to shoppinglist"
+        STATE_CONSUME         => "Verbrauchen",
+        STATE_CONSUME_SPOILED => "Verbrauchen (verdorben)",
+        STATE_CONSUME_ALL     => "Alle verbrauchen",
+        STATE_PURCHASE        => "Einkaufen",
+        STATE_OPEN            => "Öffnen",
+        STATE_GETSTOCK        => "Inventur",
+        STATE_ADD_SL          => "Zur Einkaufsliste hinzufügen"
     );
     return $allowedModes[$state];
 }

@@ -302,7 +302,7 @@ $CONFIG->checkIfAuthenticated(true);
         <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_AS"] ?>')">Zur Einkaufsliste hinzufügen</a>
         <a href="#" onclick="sendQuantity()">Menge festlegen</a>
         <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_CA"] ?>')">Alle verbrauchen</a>
-        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_CS"] ?>')">Als verdorben verbrauchen</a>
+        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_CS"] ?>')">Verbrauchen (verdorben)</a>
     </div>
 </div>
 
@@ -324,7 +324,7 @@ $CONFIG->checkIfAuthenticated(true);
     }
 
     function sendQuantity() {
-        var q = prompt('Enter quantity', '1');
+        var q = prompt('Menge eingeben', '1');
         sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_Q"] ?>' + q);
     }
 
@@ -345,11 +345,11 @@ $CONFIG->checkIfAuthenticated(true);
         if (document.getElementById('beep_success').muted) {
             document.getElementById('beep_success').muted = false;
             document.getElementById('beep_nosuccess').muted = false;
-            document.getElementById("muteimg").src = "incl/img/unmute.svg";
+            document.getElementById("muteimg").src = "incl/img/mute.svg";
         } else {
             document.getElementById('beep_success').muted = true;
             document.getElementById('beep_nosuccess').muted = true;
-            document.getElementById("muteimg").src = "incl/img/mute.svg";
+            document.getElementById("muteimg").src = "incl/img/unmute.svg";
         }
     }
 
