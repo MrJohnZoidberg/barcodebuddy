@@ -72,7 +72,7 @@ function websocket_open($host='',$port=80,$headers='',&$error_string='',$timeout
   $header.="\r\n";
 
   // Connect to server
-  $host = $host ? $host : "127.0.0.1";
+  $host = $host ? $host : "localhost";
   $port = $port <1 ? 80 : $port;
   $address = ($ssl ? 'ssl://' : '') . $host . ':' . $port;
   $sp = stream_socket_client($address, $errno, $errstr, $timeout);

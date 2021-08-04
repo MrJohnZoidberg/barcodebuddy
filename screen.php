@@ -84,7 +84,6 @@ $CONFIG->checkIfAuthenticated(true);
             padding: 10px;
             flex: 1 0 auto;
             box-sizing: border-box;
-            padding: 10px;
             text-align: center;
             align-content: center
         }
@@ -101,13 +100,7 @@ $CONFIG->checkIfAuthenticated(true);
             padding-right: 10px
         }
 
-        #soundbuttondiv {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-        }
-
-        #backbuttondiv {
+        #fullscreenbuttondiv {
             position: fixed;
             bottom: 10px;
             left: 10px;
@@ -120,49 +113,70 @@ $CONFIG->checkIfAuthenticated(true);
             transform: translateX(-50%);
         }
 
+        #soundbuttondiv {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+        }
+
+        @font-face {
+            font-family: 'jost-bold';
+            src: url("incl/fonts/jost_bold.ttf");
+        }
+
+        @font-face {
+            font-family: 'jost-medium';
+            src: url("incl/fonts/jost_medium.ttf");
+        }
+
+        @font-face {
+            font-family: 'jost-book';
+            src: url("incl/fonts/jost_book.ttf");
+        }
+
         .h1 {
-            font: bold 4em arial;
+            font: bold 4em jost-bold;
             margin: auto;
             text-align: center;
         }
 
         .h2 {
-            font: bold 3em arial;
+            font: bold 3em jost-bold;
             margin: auto;
             padding: 10px;
             text-align: center;
         }
 
         .h3 {
-            font: bold 2em arial;
+            font: bold 2em jost-bold;
             margin: auto;
             padding: 10px;
             text-align: center;
         }
 
         .h4 {
-            font: bold 1.5em arial;
+            font: bold 1.5em jost-bold;
             margin: auto;
             padding: 6px;
         }
 
         .h5 {
-            font: bold 1em arial;
+            font: bold 1em jost-bold;
             margin: auto;
             text-align: center;
         }
 
         .bottom-button {
-            background-color: #31B0D5;
+            background-color: #5a97aa;
             color: white;
             padding: 1em 2em;
-            border-radius: 4px;
-            border-color: #46b8da;
+            border-radius: 5px;
+            border-color: #5a97aa;
         }
 
         .bottom-img {
-            height: 2.5em;
-            width: 2.5em;
+            height: 3em;
+            width: 3em;
         }
 
         @media only screen and (orientation: portrait)  not (display-mode: fullscreen) {
@@ -200,6 +214,7 @@ $CONFIG->checkIfAuthenticated(true);
         .overlay a {
             padding: 8px;
             text-decoration: none;
+            font: bold 1em jost-bold;
             font-size: 36px;
             color: #818181;
             display: block;
@@ -255,8 +270,8 @@ $CONFIG->checkIfAuthenticated(true);
     </div>
 </div>
 
-<audio id="beep_success" muted="muted" src="incl/websocket/beep.ogg" type="audio/ogg" preload="auto"></audio>
-<audio id="beep_nosuccess" muted="muted" src="incl/websocket/buzzer.ogg" type="audio/ogg" preload="auto"></audio>
+<audio id="beep_success" src="incl/websocket/beep.ogg" type="audio/ogg" preload="auto"></audio>
+<audio id="beep_nosuccess" src="incl/websocket/buzzer.ogg" type="audio/ogg" preload="auto"></audio>
 <div id="soundbuttondiv">
     <button class="bottom-button" onclick="toggleSound()" id="soundbutton"><img class="bottom-img"
                                                                                 src="incl/img/mute.svg"
@@ -269,8 +284,13 @@ $CONFIG->checkIfAuthenticated(true);
     </button>
 </div>
 <div id="selectbuttondiv">
-    <button class="bottom-button" onclick="openNav()" id="selectbutton"><img class="bottom-img" src="incl/img/cart.svg"
+    <button class="bottom-button" onclick="openNav()" id="selectbutton"><img class="bottom-img" src="incl/img/list.svg"
                                                                              alt="Set mode">
+    </button>
+</div>
+<div id="fullscreenbuttondiv">
+    <button class="bottom-button" onclick="toggleFullscreen()" id="fullscreenbutton"><img class="bottom-img" src="incl/img/fullscreen.svg"
+                                                                             alt="Toggle fullscreen">
     </button>
 </div>
 
@@ -325,24 +345,30 @@ $CONFIG->checkIfAuthenticated(true);
     }
 
     function toggleSound() {
+        if (document.getElementById('beep_success').muted) {
+            document.getElementById('beep_success').muted = false;
+            document.getElementById('beep_nosuccess').muted = false;
+            document.getElementById("muteimg").src = "incl/img/unmute.svg";
+        } else {
+            document.getElementById('beep_success').muted = true;
+            document.getElementById('beep_nosuccess').muted = true;
+            document.getElementById("muteimg").src = "incl/img/mute.svg";
+        }
+    }
+
+    function toggleFullscreen() {
         if (!wakeLockEnabled) {
             noSleep.enable();
             wakeLockEnabled = true;
-            document.getElementById('beep_success').muted = false;
-            document.getElementById('beep_nosuccess').muted = false;
             <?php if (BBConfig::getInstance()["WS_FULLSCREEN"]) {
             echo " document.documentElement.requestFullscreen();";
         }?>
-            document.getElementById("muteimg").src = "incl/img/unmute.svg";
         } else {
             noSleep.disable();
             <?php if (BBConfig::getInstance()["WS_FULLSCREEN"]) {
             echo " document.exitFullscreen();";
         } ?>
             wakeLockEnabled = false;
-            document.getElementById('beep_success').muted = true;
-            document.getElementById('beep_nosuccess').muted = true;
-            document.getElementById("muteimg").src = "incl/img/mute.svg";
         }
     }
 
@@ -418,19 +444,19 @@ $CONFIG->checkIfAuthenticated(true);
             var resultText = resultJson.data.substring(1);
             switch (resultCode) {
                 case '0':
-                    resultScan("#33a532", "", he.decode(resultText), "beep_success");
+                    resultScan("#789f8a", "", he.decode(resultText), "beep_success");
                     break;
                 case '1':
-                    resultScan("#a2ff9b", "Barcode Looked Up", he.decode(resultText), "beep_success");
+                    resultScan("#60837a", "Barcode Looked Up", he.decode(resultText), "beep_success");
                     break;
                 case '2':
-                    resultScan("#eaff8a", "Unknown Barcode", resultText, "beep_nosuccess");
+                    resultScan("#deb853", "Unknown Barcode", resultText, "beep_nosuccess");
                     break;
                 case '4':
                     document.getElementById('mode').textContent = resultText;
                     break;
                 case 'E':
-                    document.getElementById('content').style.backgroundColor = '#CC0605';
+                    document.getElementById('content').style.backgroundColor = '#e06a4e';
                     document.getElementById('grocy-sse').textContent = 'disconnected';
                     document.getElementById('scan-result').style.display = 'none'
                     document.getElementById('previous-events').style.display = 'none'
@@ -440,7 +466,7 @@ $CONFIG->checkIfAuthenticated(true);
             }
         };
     } else {
-        document.getElementById('content').style.backgroundColor = '#f9868b';
+        document.getElementById('content').style.backgroundColor = '#e06a4e';
         document.getElementById('grocy-sse').textContent = 'Disconnected';
         document.getElementById('event').textContent = 'Sorry, your browser does not support server-sent events';
     }
