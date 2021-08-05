@@ -603,6 +603,20 @@ class API {
         return $result;
     }
 
+    /**
+     * @return array|null
+     */
+    public static function getAllProducts(): ?array {
+        $curl = new CurlGenerator(API_O_PRODUCTS);
+        try {
+            $curlResult = $curl->execute(true);
+        } catch (Exception $e) {
+            self::processError($e, "Could not lookup Grocy products");
+            return null;
+        }
+        return $curlResult;
+    }
+
 
     /**
      * Gets location and amount of stock of a product

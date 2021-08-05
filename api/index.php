@@ -142,6 +142,8 @@ class BBuddyApi {
 
         $this->addRoute(new ApiRoute("/action/name", function () {
             $name = "";
+            if (isset($_GET["text"]))
+                $name = $_GET["text"];
             if (isset($_POST["text"]))
                 $name = $_POST["text"];
             if ($name == "")

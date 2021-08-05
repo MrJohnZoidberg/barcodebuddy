@@ -95,21 +95,26 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
         return processUnknownBarcode($sanitizedBarcode, true, $lockGenerator, $bestBeforeInDays, $price);
     } else {
         $db->saveLastBarcode($sanitizedBarcode, $productInfoFromBarcode->name);
-        return processKnownBarcode($productInfoFromBarcode, $sanitizedBarcode, true, $lockGenerator, $bestBeforeInDays, $price);
+        return processKnownBarcode($productInfoFromBarcode, true, $lockGenerator, $sanitizedBarcode, $bestBeforeInDays, $price);
     }
 }
 
 function processNewProductName(string $text): string {
-    $db     = DatabaseConnection::getInstance();
-    $config = BBConfig::getInstance();
+    $allProducts = API::getAllProducts();
+    if (!isset($allProducts)) return "products could not be loaded";
 
-    $log    = new LogOutput($text, EVENT_TYPE_ADD_KNOWN_BARCODE);
-    $log
-        ->setSendWebsocket(true)
-        ->setWebsocketResultCode(WS_RESULT_PRODUCT_FOUND)
-        ->addProductFoundText()
-        ->createLog();
-    return "Test successful";
+    $text_lower = strtolower($text);
+    foreach ($allProducts as $product) {
+        if (!isset($product["id"]) || !isset($product['name'])) continue;
+        if (strtolower($product['name']) == $text_lower) {
+            $productInfo = GrocyProduct::parseProductInfoObjects($product);
+            $lockGenerator    = new LockGenerator();
+            $lockGenerator->createLock();
+            processKnownBarcode($productInfo, true, $lockGenerator, null, null, null);
+            return "success";
+        }
+    }
+    return "success";
 }
 
 function createLogModeChange(int $state): string {
@@ -341,19 +346,19 @@ function processRefreshedBarcode(string $barcode) {
 /**
  * Process a barcode that Grocy already knows
  * @param GrocyProduct $productInfo
- * @param string $barcode
  * @param bool $websocketEnabled
  * @param LockGenerator $fileLock
+ * @param string|null $barcode
  * @param string|null $bestBeforeInDays
  * @param string|null $price
  * @return string
  * @throws DbConnectionDuringEstablishException
  */
-function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $websocketEnabled, LockGenerator &$fileLock, ?string $bestBeforeInDays, ?string $price): string {
+function processKnownBarcode(GrocyProduct $productInfo, bool $websocketEnabled, LockGenerator &$fileLock, ?string $barcode, ?string $bestBeforeInDays, ?string $price): string {
     $config = BBConfig::getInstance();
     $db     = DatabaseConnection::getInstance();
 
-    if ($productInfo->isTare) {
+    if ($productInfo->isTare and isset($barcode)) {
         if (!$db->isUnknownBarcodeAlreadyStored($barcode))
             $db->insertActionRequiredBarcode($barcode, $bestBeforeInDays, $price);
         $fileLock->removeLock();
@@ -366,8 +371,11 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
 
     switch ($state) {
         case STATE_CONSUME:
-            $amountToConsume = QuantityManager::getQuantityForBarcode($barcode, true, $productInfo);
-
+            if (isset($barcode)) {
+                $amountToConsume = QuantityManager::getQuantityForBarcode($barcode, true, $productInfo);
+            } else {
+                $amountToConsume = 1;
+            }
             if ($productInfo->stockAmount > 0) {
                 if ($productInfo->stockAmount < $amountToConsume)
                     $amountToConsume = $productInfo->stockAmount;
@@ -435,7 +443,11 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
             return $output;
         case STATE_PURCHASE:
             $isWarning = false;
-            $amount    = QuantityManager::getQuantityForBarcode($barcode, false, $productInfo);
+            if (isset($barcode)) {
+                $amount = QuantityManager::getQuantityForBarcode($barcode, false, $productInfo);
+            } else {
+                $amount = 1;
+            }
             if ($productInfo->defaultBestBeforeDays == 0 && $bestBeforeInDays == null) {
                 $additionalLog = " <span style=\"color: orange;\">No default best before date set!</span>";
                 $isWarning     = true;
