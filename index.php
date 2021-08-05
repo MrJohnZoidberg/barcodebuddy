@@ -453,7 +453,7 @@ function getHtmlMainMenuTableUnknown(array $barcodes): string {
     global $CONFIG;
     $html = new UiEditor(true, null, "f2");
     if (sizeof($barcodes['unknown']) == 0) {
-        $html->addHtml("No unknown barcodes yet.");
+        $html->addHtml("Aktuell keine unbekannten Barcodes.");
     } else {
         $table = new TableGenerator(array(
             "Barcode",
@@ -527,7 +527,7 @@ function getHtmlLogTextArea(): string {
     $logs = $db->getLogs();
     $html = new UiEditor(true, null, "f3");
     if (sizeof($logs) == 0) {
-        $html->addHtml("Bisher keine verarbeiteten Barcodes.");
+        $html->addHtml("Aktuell keine verarbeiteten Barcodes.");
     } else {
         $html->addHtml('<div style="
             -moz-appearance: textfield-multiline;

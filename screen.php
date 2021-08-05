@@ -200,8 +200,8 @@ $CONFIG->checkIfAuthenticated(true);
             z-index: 15;
             bottom: 0;
             left: 0;
-            background-color: rgb(0, 0, 0);
-            background-color: rgba(0, 0, 0, 0.9);
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
             overflow-x: hidden;
             transition: 0.3s;
         }
@@ -215,7 +215,7 @@ $CONFIG->checkIfAuthenticated(true);
         }
 
         .overlay a {
-            padding: 8px;
+            padding: 4px;
             text-decoration: none;
             font: bold 1em jost-bold;
             font-size: 36px;
