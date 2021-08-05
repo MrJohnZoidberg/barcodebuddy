@@ -137,13 +137,13 @@ $CONFIG->checkIfAuthenticated(true);
         }
 
         .h1 {
-            font: bold 4em jost-bold;
+            font: bold 3em jost-bold;
             margin: auto;
             text-align: center;
         }
 
         .h2 {
-            font: bold 3em jost-bold;
+            font: bold 2.5em jost-bold;
             margin: auto;
             padding: 10px;
             text-align: center;
