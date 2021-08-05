@@ -353,12 +353,17 @@ $CONFIG->checkIfAuthenticated(true);
     }
 
     function toggleFullscreen() {
+        let xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "http://localhost:1234/start_listening", true);
+        xhttp.send();
+        return;
+
         if (!wakeLockEnabled) {
             noSleep.enable();
             wakeLockEnabled = true;
             <?php if (BBConfig::getInstance()["WS_FULLSCREEN"]) {
             echo " document.documentElement.requestFullscreen();";
-        }?>
+            }?>
         } else {
             noSleep.disable();
             <?php if (BBConfig::getInstance()["WS_FULLSCREEN"]) {
