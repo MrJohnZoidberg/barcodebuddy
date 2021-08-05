@@ -107,7 +107,7 @@ function processNewProductName(string $text): string {
     foreach ($allProducts as $product) {
         if (!isset($product["id"]) || !isset($product['name'])) continue;
         if (strtolower($product['name']) == $text_lower) {
-            $productInfo = GrocyProduct::parseProductInfoObjects($product);
+            $productInfo = API::getProductInfo($product['id']);
             $lockGenerator    = new LockGenerator();
             $lockGenerator->createLock();
             processKnownBarcode($productInfo, true, $lockGenerator, null, null, null);
