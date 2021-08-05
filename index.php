@@ -241,9 +241,11 @@ function processButtons() {
                     if (!$db->isUnknownBarcodeAlreadyStored($barcode))
                         $db->insertActionRequiredBarcode($barcode, $row["bestBeforeInDays"], $row["price"]);
                     $log = new LogOutput("Action required: Enter weight for " . $product->name, EVENT_TYPE_ACTION_REQUIRED, $barcode);
-                    $log->setVerbose()->dontSendWebsocket()->createLog();
                 } else {
                     if ($isConsume) {
+                        if ($amount < 0) {
+                            $amount = -$amount;
+                        }
                         if ($product->stockAmount < $amount)
                             $amount = $product->stockAmount;
                         if ($amount > 0) {
@@ -252,16 +254,15 @@ function processButtons() {
                         } else {
                             $log = new LogOutput("None in stock, not consuming: " . $product->name, EVENT_TYPE_ADD_KNOWN_BARCODE);
                         }
-                        $log->setVerbose()->dontSendWebsocket()->createLog();
                     } else {
                         $additionalLog = "";
                         if (!API::purchaseProduct($gidSelected, $amount, $row["bestBeforeInDays"], $row["price"])) {
                             $additionalLog = " [WARNING]: No default best before date set!";
                         }
                         $log = new LogOutput("Adding $amount " . $product->unit . " of " . $product->name . $additionalLog, EVENT_TYPE_ADD_KNOWN_BARCODE);
-                        $log->setVerbose()->dontSendWebsocket()->createLog();
                     }
                 }
+                $log->setVerbose()->dontSendWebsocket()->createLog();
             }
         }
         //Hide POST, so we can refresh
