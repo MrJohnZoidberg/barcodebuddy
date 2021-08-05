@@ -681,22 +681,6 @@ class API {
     }
 
     /**
-     * Start listening on Python app
-     */
-    public static function sendPythonStartListeningMsg() : bool {
-        $url = "http://localhost:1234/start_listening";
-
-        $result = null;  // Assure assignment in event curl throws exception.
-        $curl   = new CurlGenerator($url, METHOD_POST, "{'test': 3}", null, true);
-        try {
-            $result = $curl->execute(true);
-        } catch (Exception $e) {
-            self::processError($e, "Could not start listening");
-        }
-        return $result;
-    }
-
-    /**
      * @param Exception $e
      * @param string $errorMessage
      */

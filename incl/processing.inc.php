@@ -99,6 +99,19 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
     }
 }
 
+function processNewProductName(string $text): string {
+    $db     = DatabaseConnection::getInstance();
+    $config = BBConfig::getInstance();
+
+    $log    = new LogOutput($text, EVENT_TYPE_ADD_KNOWN_BARCODE);
+    $log
+        ->setSendWebsocket(true)
+        ->setWebsocketResultCode(WS_RESULT_PRODUCT_FOUND)
+        ->addProductFoundText()
+        ->createLog();
+    return "Test successful";
+}
+
 function createLogModeChange(int $state): string {
     $text = "Umschalten auf  ";
     switch ($state) {

@@ -140,6 +140,18 @@ class BBuddyApi {
             }
         }));
 
+        $this->addRoute(new ApiRoute("/action/name", function () {
+            $name = "";
+            if (isset($_POST["text"]))
+                $name = $_POST["text"];
+            if ($name == "")
+                return self::createResultArray(null, "No name supplied", 400);
+            else {
+                $result = processNewProductName(sanitizeString($name));
+                return self::createResultArray(array("result" => sanitizeString($result)));
+            }
+        }));
+
         $this->addRoute(new ApiRoute("/state/getmode", function () {
             return self::createResultArray(array(
                 "mode" => DatabaseConnection::getInstance()->getTransactionState()
