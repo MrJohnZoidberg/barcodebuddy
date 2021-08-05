@@ -121,23 +121,23 @@ $link = (new MenuItemLink())
     ->setText("Delete all")
     ->setLink('window.location.href=\'' . $CONFIG->getPhpSelfWithBaseUrl() . '?delete=req_actions\'');
 if (sizeof($barcodes['tare']) > 0) {
-    $webUi->addCard("Action required", getHtmlMainMenuReqActions($barcodes), $link);
+    $webUi->addCard("Aktion erforderlich", getHtmlMainMenuReqActions($barcodes), $link);
 }
 
 $link = (new MenuItemLink())
     ->setText("Delete all")
     ->setLink('window.location.href=\'' . $CONFIG->getPhpSelfWithBaseUrl() . '?delete=known\'');
-$webUi->addCard("New Barcodes", getHtmlMainMenuTableKnown($barcodes), $link);
+$webUi->addCard("Neue Barcodes", getHtmlMainMenuTableKnown($barcodes), $link);
 
 $link = (new MenuItemLink())
     ->setText("Delete all")
     ->setLink('window.location.href=\'' . $CONFIG->getPhpSelfWithBaseUrl() . '?delete=unknown\'');
-$webUi->addCard("Unknown Barcodes", getHtmlMainMenuTableUnknown($barcodes), $link);
+$webUi->addCard("Unbekannte Barcodes", getHtmlMainMenuTableUnknown($barcodes), $link);
 
 $link = (new MenuItemLink())
     ->setText("Clear log")
     ->setLink('window.location.href=\'' . $CONFIG->getPhpSelfWithBaseUrl() . '?delete=log\'');
-$webUi->addCard("Processed Barcodes", getHtmlLogTextArea(), $link);
+$webUi->addCard("Verarbeitete Barcodes", getHtmlLogTextArea(), $link);
 $webUi->addScript("updateRedisCacheAndFederation(false)");
 $webUi->addFooter();
 displayFederationPopupHtml($webUi);
@@ -267,6 +267,29 @@ function processButtons() {
         //Hide POST, so we can refresh
         header("Location: " . $CONFIG->getPhpSelfWithBaseUrl());
         die();
+    } else if (isset($_POST["button_link"])) {
+        $id        = $_POST["button_link"];
+        checkIfNumeric($id);
+        $gidSelected = $_POST["select_" . $id];
+        if ($gidSelected != 0) {
+            $row = $db->getBarcodeById($id);
+            if ($row !== false) {
+                $barcode = sanitizeString($row["barcode"], true);
+                if (isset($_POST["tags"])) {
+                    foreach ($_POST["tags"][$id] as $tag) {
+                        TagManager::add(sanitizeString($tag), $gidSelected);
+                    }
+                }
+                $product = API::getProductInfo(sanitizeString($gidSelected));
+                API::addBarcode($gidSelected, $barcode);
+                $log = new LogOutput("Associated barcode $barcode with " . $product->name, EVENT_TYPE_ASSOCIATE_PRODUCT);
+                $log->setVerbose()->dontSendWebsocket()->createLog();
+                $db->deleteBarcode($id);
+            }
+        }
+        //Hide POST, so we can refresh
+        header("Location: " . $CONFIG->getPhpSelfWithBaseUrl());
+        die();
     }
 }
 
@@ -337,12 +360,12 @@ function getHtmlMainMenuTableKnown(array $barcodes): string {
         $arrayTableEntries = array(
             "Name",
             "Barcode",
-            "Quantity",
-            "Product",
-            "Action",
+            "Menge",
+            "Produkt",
+            "Aktion",
             "Tags",
-            "Create",
-            "Remove");
+            "Erstellen",
+            "Löschen");
         if ($containsFederationName)
             array_splice($arrayTableEntries, 1, 0, array("Federation"));
 
@@ -366,16 +389,19 @@ function getHtmlMainMenuTableKnown(array $barcodes): string {
                 $table->addCell($bbServerButton);
             $table->addCell($item['barcode']);
             $table->addCell($item['amount']);
-            $table->addCell('<select style="max-width: 20em;" onchange=\'enableButton("select_' . $itemId . '", "button_add_' . $item['id'] . '", "button_consume_' . $item['id'] . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
-            $table->addCell($html->buildButton("button_add", "Add")
-                    ->setDisabled($isDisabled)
-                    ->setSubmit()
-                    ->setRaised()
-                    ->setIsAccent()
-                    ->setValue($item['id'])
-                    ->setId('button_add_' . $item['id'])
-                    ->generate(true) . ' ' .
-                $html->buildButton("button_consume", "Consume")
+            if ($item['amount'] == 0) {
+                $table->addCell('<select style="max-width: 20em;" onchange=\'enableButtonSingle("select_' . $itemId . '", "button_link_' . $itemId . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
+                $table->addCell($html->buildButton("button_link", "Barcode verknüpfen")
+                        ->setDisabled($isDisabled)
+                        ->setSubmit()
+                        ->setRaised()
+                        ->setIsAccent()
+                        ->setValue($item['id'])
+                        ->setId('button_link_' . $item['id'])
+                        ->generate(true));
+            } else if ($item['amount'] < 0) {
+                $table->addCell('<select style="max-width: 20em;" onchange=\'enableButtonSingle("select_' . $itemId . '", "button_consume_' . $itemId . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
+                $table->addCell($html->buildButton("button_consume", "Verbrauchen")
                     ->setDisabled($isDisabled)
                     ->setSubmit()
                     ->setRaised()
@@ -383,11 +409,22 @@ function getHtmlMainMenuTableKnown(array $barcodes): string {
                     ->setValue($item['id'])
                     ->setId('button_consume_' . $item['id'])
                     ->generate(true));
+            } else {
+                $table->addCell('<select style="max-width: 20em;" onchange=\'enableButtonSingle("select_' . $itemId . '", "button_add_' . $itemId . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
+                $table->addCell($html->buildButton("button_add", "Hinzufügen")
+                    ->setDisabled($isDisabled)
+                    ->setSubmit()
+                    ->setRaised()
+                    ->setIsAccent()
+                    ->setValue($item['id'])
+                    ->setId('button_add_' . $item['id'])
+                    ->generate(true));
+            }
             $table->addCell(explodeWordsAndMakeCheckboxes($item['name'], $itemId));
-            $table->addCell($html->buildButton("button_createproduct", "Create Product")
+            $table->addCell($html->buildButton("button_createproduct", "Produkt erstellen")
                 ->setOnClick('openNewTab(\'' . BBConfig::getInstance()["GROCY_BASE_URL"] . 'product/new?closeAfterCreation&flow=InplaceNewProductWithName&name=' . rawurlencode(htmlspecialchars_decode($item['name'], ENT_QUOTES)) . '\', \'' . $item['barcode'] . '\')')
                 ->generate(true));
-            $table->addCell($html->buildButton("button_delete", "Remove")->setSubmit()->setValue($item['id'])->generate(true));
+            $table->addCell($html->buildButton("button_delete", "Löschen")->setSubmit()->setValue($item['id'])->generate(true));
             $table->endRow();
         }
         $html->addTableClass($table);
@@ -416,16 +453,15 @@ function getHtmlMainMenuTableUnknown(array $barcodes): string {
     $html = new UiEditor(true, null, "f2");
     if (sizeof($barcodes['unknown']) == 0) {
         $html->addHtml("No unknown barcodes yet.");
-        return $html->getHtml();
     } else {
         $table = new TableGenerator(array(
             "Barcode",
-            "Look up",
-            "Quantity",
-            "Product",
-            "Action",
-            "Create",
-            "Remove"
+            "Nachschlagen",
+            "Menge",
+            "Produkt",
+            "Aktion",
+            "Erstellen",
+            "Löschen"
         ));
         foreach ($barcodes['unknown'] as $item) {
             $isDisabled = "disabled";
@@ -437,16 +473,19 @@ function getHtmlMainMenuTableUnknown(array $barcodes): string {
             $table->addCell($item['barcode']);
             $table->addCell('<a href="' . $CONFIG->SEARCH_ENGINE . $item['barcode'] . '" target="_blank">Search for barcode</a>');
             $table->addCell($item['amount']);
-            $table->addCell('<select style="max-width: 20em;" onchange=\'enableButton("select_' . $itemId . '", "button_add_' . $item['id'] . '", "button_consume_' . $item['id'] . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
-            $table->addCell($html->buildButton("button_add", "Add")
+            if ($item['amount'] == 0) {
+                $table->addCell('<select style="max-width: 20em;" onchange=\'enableButtonSingle("select_' . $itemId . '", "button_link_' . $itemId . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
+                $table->addCell($html->buildButton("button_link", "Barcode verknüpfen")
                     ->setDisabled($isDisabled)
                     ->setSubmit()
                     ->setRaised()
                     ->setIsAccent()
                     ->setValue($item['id'])
-                    ->setId('button_add_' . $item['id'])
-                    ->generate(true) . ' ' .
-                $html->buildButton("button_consume", "Consume")
+                    ->setId('button_link_' . $item['id'])
+                    ->generate(true));
+            } else if ($item['amount'] < 0) {
+                $table->addCell('<select style="max-width: 20em;" onchange=\'enableButtonSingle("select_' . $itemId . '", "button_consume_' . $itemId . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
+                $table->addCell($html->buildButton("button_consume", "Verbrauchen")
                     ->setDisabled($isDisabled)
                     ->setSubmit()
                     ->setRaised()
@@ -454,15 +493,26 @@ function getHtmlMainMenuTableUnknown(array $barcodes): string {
                     ->setValue($item['id'])
                     ->setId('button_consume_' . $item['id'])
                     ->generate(true));
-            $table->addCell($html->buildButton("button_createproduct", "Create Product")
+            } else {
+                $table->addCell('<select style="max-width: 20em;" onchange=\'enableButtonSingle("select_' . $itemId . '", "button_add_' . $itemId . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
+                $table->addCell($html->buildButton("button_add", "Hinzufügen")
+                    ->setDisabled($isDisabled)
+                    ->setSubmit()
+                    ->setRaised()
+                    ->setIsAccent()
+                    ->setValue($item['id'])
+                    ->setId('button_add_' . $item['id'])
+                    ->generate(true));
+            }
+            $table->addCell($html->buildButton("button_createproduct", "Produkt erstellen")
                 ->setOnClick('openNewTab(\'' . BBConfig::getInstance()["GROCY_BASE_URL"] . 'product/new?closeAfterCreation&prefillbarcode=' . $item['barcode'] . '\', \'' . $item['barcode'] . '\')')
                 ->generate(true));
-            $table->addCell($html->buildButton("button_delete", "Remove")->setSubmit()->setValue($item['id'])->generate(true));
+            $table->addCell($html->buildButton("button_delete", "Löschen")->setSubmit()->setValue($item['id'])->generate(true));
             $table->endRow();
         }
         $html->addTableClass($table);
-        return $html->getHtml();
     }
+    return $html->getHtml();
 }
 
 
@@ -476,8 +526,7 @@ function getHtmlLogTextArea(): string {
     $logs = $db->getLogs();
     $html = new UiEditor(true, null, "f3");
     if (sizeof($logs) == 0) {
-        $html->addHtml("No processed items yet.");
-        return $html->getHtml();
+        $html->addHtml("Bisher keine verarbeiteten Barcodes.");
     } else {
         $html->addHtml('<div style="
             -moz-appearance: textfield-multiline;
@@ -489,6 +538,6 @@ function getHtmlLogTextArea(): string {
             $html->addHtml($log . "<br>");
         }
         $html->addHtml('</div>');
-        return $html->getHtml();
     }
+    return $html->getHtml();
 }

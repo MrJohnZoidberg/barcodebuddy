@@ -173,7 +173,7 @@ $CONFIG->checkIfAuthenticated(true);
             color: white;
             padding: 1em 2em;
             border: none;
-            border-radius: 3px;
+            border-radius: 16px;
             box-shadow: 0 1px 6px rgba(57, 63, 72, 0.5);
         }
 

@@ -187,13 +187,22 @@ function processChoreBarcode(string $barcode) {
 function processUnknownBarcode(string $barcode, bool $websocketEnabled, LockGenerator &$fileLock, ?string $bestBeforeInDays, ?string $price): string {
     $db     = DatabaseConnection::getInstance();
     $amount = 1;
-    if ($db->getTransactionState() == STATE_PURCHASE) {
+    $state = $db->getTransactionState();
+    if ($state == STATE_PURCHASE) {
         $amount = QuantityManager::getStoredQuantityForBarcode($barcode);
+    }
+    if ($state == STATE_CONSUME) {
+        $amount = -$amount;
     }
     if ($db->isUnknownBarcodeAlreadyStored($barcode)) {
         //Unknown barcode already in local database
         $db->addQuantityToUnknownBarcode($barcode, $amount);
-        $log    = new LogOutput("Unknown product already scanned. Increasing quantity.", EVENT_TYPE_ADD_NEW_BARCODE, $barcode);
+        if ($state == STATE_PURCHASE) {
+            $msg_log = "Unbekanntes Produkt schon mal gescannt worden, Menge wird erhöht.";
+        } else {
+            $msg_log = "Unbekanntes Produkt schon mal gescannt worden, Menge wird verringert.";
+        }
+        $log    = new LogOutput($msg_log, EVENT_TYPE_ADD_NEW_BARCODE, $barcode);
         $output = $log
             ->insertBarcodeInWebsocketText()
             ->setSendWebsocket($websocketEnabled)
@@ -206,7 +215,7 @@ function processUnknownBarcode(string $barcode, bool $websocketEnabled, LockGene
         }
         if ($productname != null) {
             $db->insertUnrecognizedBarcode($barcode, $amount, $bestBeforeInDays, $price, $productname);
-            $log    = new LogOutput("Unknown barcode looked up, found name: " . $productname["name"], EVENT_TYPE_ADD_NEW_BARCODE, $barcode);
+            $log    = new LogOutput("Unbekannter Barcode nachgeschlagen, gefundener Name: " . $productname["name"], EVENT_TYPE_ADD_NEW_BARCODE, $barcode);
             $output = $log
                 ->insertBarcodeInWebsocketText()
                 ->setSendWebsocket($websocketEnabled)
@@ -215,7 +224,7 @@ function processUnknownBarcode(string $barcode, bool $websocketEnabled, LockGene
                 ->createLog();
         } else {
             $db->insertUnrecognizedBarcode($barcode, $amount, $bestBeforeInDays, $price);
-            $log    = new LogOutput("Unknown barcode could not be looked up.", EVENT_TYPE_ADD_UNKNOWN_BARCODE, $barcode);
+            $log    = new LogOutput("Unbekannter Barcode wurde in keiner Datenbank gefunden.", EVENT_TYPE_ADD_UNKNOWN_BARCODE, $barcode);
             $output = $log
                 ->insertBarcodeInWebsocketText()
                 ->setSendWebsocket($websocketEnabled)

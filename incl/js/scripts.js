@@ -2,8 +2,14 @@ function enableButton(idSelect, idButtonAdd, idButtonConsume) {
     let oSelect = document.getElementById(idSelect);
     let oButtonAdd = document.getElementById(idButtonAdd);
     let oButtonConsume = document.getElementById(idButtonConsume);
-    oButtonAdd.disabled = oSelect.value == "0";
-    oButtonConsume.disabled = oSelect.value == "0";
+    oButtonAdd.disabled = oSelect.value === "0";
+    oButtonConsume.disabled = oSelect.value === "0";
+}
+
+function enableButtonSingle(idSelect, idButton) {
+    let oSelect = document.getElementById(idSelect);
+    let oButton = document.getElementById(idButton);
+    oButton.disabled = oSelect.value === "0";
 }
 
 function sleep(time) {
