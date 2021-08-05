@@ -16,6 +16,8 @@
  * @since      File available since Release 1.0
  */
 
+use Fuse\Fuse;
+
 require_once __DIR__ . "/lockGenerator.inc.php";
 require_once __DIR__ . "/db.inc.php";
 require_once __DIR__ . "/config.inc.php";
@@ -103,10 +105,12 @@ function processNewProductName(string $text): string {
     $allProducts = API::getAllProducts();
     if (!isset($allProducts)) return "products could not be loaded";
 
-    $text_lower = strtolower($text);
+    $textLower = strtolower($text);
+    $productNamesIds = array();
     foreach ($allProducts as $product) {
         if (!isset($product["id"]) || !isset($product['name'])) continue;
-        if (strtolower($product['name']) == $text_lower) {
+        $productNamesIds[$product['name']] = $product["id"];
+        if (strtolower($product['name']) == $textLower) {
             $productInfo = API::getProductInfo($product['id']);
             $lockGenerator    = new LockGenerator();
             $lockGenerator->createLock();
@@ -114,6 +118,13 @@ function processNewProductName(string $text): string {
             return "success";
         }
     }
+
+    $fuse = new Fuse(array_keys($productNamesIds));
+    $results = $fuse->search($textLower);
+    $productInfo = API::getProductInfo($results[0]);
+    $lockGenerator    = new LockGenerator();
+    $lockGenerator->createLock();
+    processKnownBarcode($productInfo, true, $lockGenerator, null, null, null);
     return "success";
 }
 

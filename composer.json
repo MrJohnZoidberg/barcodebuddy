@@ -3,6 +3,7 @@
     "vimeo/psalm": "4.4.1"
   },
   "require": {
-    "ext-redis": "*"
+    "ext-redis": "*",
+    "loilo/fuse": "*"
   }
 }
