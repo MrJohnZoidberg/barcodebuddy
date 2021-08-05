@@ -762,7 +762,7 @@ class LogOutput {
             $this->logText .= ".";
         if (substr($this->websocketText, -1) != "!")
             $this->websocketText .= ".";
-        $text = " In Stock: $amount";
+        $text = " Im Bestand: $amount";
 
         $this->logText       .= $text;
         $this->websocketText .= $text;
@@ -771,7 +771,7 @@ class LogOutput {
 
 
     public function addProductFoundText(): LogOutput {
-        $this->logText = "Product found. " . $this->logText;
+        $this->logText = "Produkt gefunden. " . $this->logText;
         return $this;
     }
 
