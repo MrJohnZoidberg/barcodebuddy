@@ -200,8 +200,7 @@ $CONFIG->checkIfAuthenticated(true);
             z-index: 15;
             bottom: 0;
             left: 0;
-            background-color: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(20px);
+            background-color: rgba(0, 0, 0, 0.9);
             overflow-x: hidden;
             transition: 0.3s;
         }
