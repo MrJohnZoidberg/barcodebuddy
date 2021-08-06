@@ -140,15 +140,23 @@ class BBuddyApi {
             }
         }));
 
-        $this->addRoute(new ApiRoute("/action/name", function () {
+        $this->addRoute(new ApiRoute("/action/product", function () {
             $name = "";
-            if (isset($_GET["text"]))
-                $name = $_GET["text"];
-            if (isset($_POST["text"]))
-                $name = $_POST["text"];
-            if ($name == "")
+            $id = "";
+            if (isset($_GET["name"]))
+                $name = $_GET["name"];
+            if (isset($_POST["name"]))
+                $name = $_POST["name"];
+            if (isset($_GET["id"]))
+                $id = $_GET["id"];
+            if (isset($_POST["id"]))
+                $id = $_POST["id"];
+            if ($name == "" and $id == "")
                 return self::createResultArray(null, "No name supplied", 400);
-            else {
+            else if ($id != "") {
+                $result = processNewProductId(sanitizeString($id));
+                return self::createResultArray(array("result" => sanitizeString($result)));
+            } else {
                 $result = processNewProductName(sanitizeString($name));
                 return self::createResultArray(array("result" => sanitizeString($result)));
             }

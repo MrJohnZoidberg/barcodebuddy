@@ -264,7 +264,7 @@ $CONFIG->checkIfAuthenticated(true);
         <div id="log">
             <p id="event" class="h3"></p><br>
             <div id="previous-events">
-                <p class="h4 p-t10"> Letzte Scans: </p>
+                <p class="h4 p-t10"> Letzte Aktionen: </p>
                 <span id="log-entries" class="h5"></span>
             </div>
         </div>
@@ -306,7 +306,7 @@ $CONFIG->checkIfAuthenticated(true);
 </div>
 
 <div id="productChooser" class="overlay">
-    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <a href="javascript:void(0)" class="closebtn" onclick="closeProductChooser()">&times;</a>
     <div class="overlay-content" id="productContainer">
     </div>
 </div>
@@ -323,9 +323,9 @@ $CONFIG->checkIfAuthenticated(true);
 
     function openProductChooser(productArray) {
         let innerHTMLProducts = "";
-        for(let product in productArray) {
-            let innerHTMLProduct = "<a href=\"#\" onclick=\"sendProduct(" + product['id'] + ")\">" + product['name'] + "</a>";
-            String.prototype.concat(innerHTMLProducts, innerHTMLProduct);
+        for (let i = 0; i < productArray.length; i++) {
+            let product = productArray[i];
+            innerHTMLProducts = innerHTMLProducts + "<a href=\"#\" onclick=\"sendProduct(" + product.id + ")\">" + product.name + "</a>";
         }
         document.getElementById("productContainer").innerHTML = innerHTMLProducts;
         document.getElementById("productChooser").style.height = "100%";
@@ -348,7 +348,10 @@ $CONFIG->checkIfAuthenticated(true);
     }
 
     function sendProduct(productId) {
-
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "./api/action/product?id=" + productId, true);
+        xhttp.send();
+        closeProductChooser();
     }
 
     var noSleep = new NoSleep();
@@ -447,7 +450,9 @@ $CONFIG->checkIfAuthenticated(true);
             document.getElementById('event').textContent = message;
             document.getElementById('scan-result').textContent = text;
             document.getElementById(sound).play();
-            document.getElementById('log-entries').innerText = '\r\n' + text + document.getElementById('log-entries').innerText;
+            if (text != null) {
+                document.getElementById('log-entries').innerText = '\r\n' + text + document.getElementById('log-entries').innerText;
+            }
             currentScanId++;
             resetScan(currentScanId);
         }
@@ -481,8 +486,10 @@ $CONFIG->checkIfAuthenticated(true);
                     document.getElementById('mode').textContent = resultText;
                     break;
                 case '5':
-                    resultScan("#60837a", "Bitte Produkt wählen", resultText, "beep_success");
                     openProductChooser(JSON.parse(resultText))
+                    break;
+                case '6':
+                    resultScan("#deb853", "Keine ähnlichen Produkte gefunden", null, "beep_nosuccess");
                     break;
                 case 'E':
                     document.getElementById('content').style.backgroundColor = '#e06a4e';

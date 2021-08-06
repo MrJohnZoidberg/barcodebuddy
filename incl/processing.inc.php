@@ -131,9 +131,10 @@ function processNewProductName(string $text): string {
         sendProductsListForChoosing($results);
         return "user has to choose between products";
     }
+}
 
-
-    $productInfo = API::getProductInfo($results[0]);
+function processNewProductId(string $id): string {
+    $productInfo = API::getProductInfo($id);
     $lockGenerator    = new LockGenerator();
     $lockGenerator->createLock();
     processKnownBarcode($productInfo, true, $lockGenerator, null, null, null);
