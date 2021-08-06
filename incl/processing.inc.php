@@ -126,6 +126,7 @@ function processNewProductName(string $text): string {
     ]);
     $results = $fuse->search($textLower);
     if (count($results) == 0) {
+        sendWebsocketMessage(null, WS_RESULT_NO_FUZZY_RESULTS);
         return "no product with fuzzy search found";
     } else {
         sendProductsListForChoosing($results);
@@ -200,6 +201,8 @@ const WS_RESULT_PRODUCT_FOUND     = 0;
 const WS_RESULT_PRODUCT_LOOKED_UP = 1;
 const WS_RESULT_PRODUCT_UNKNOWN   = 2;
 const WS_RESULT_MODE_CHANGE       = 4;
+const WS_RESULT_CHOOSE_PRODUCT    = 5;
+const WS_RESULT_NO_FUZZY_RESULTS  = 6;
 const WS_RESULT_ERROR             = 'E';
 
 

@@ -102,7 +102,7 @@ $CONFIG->checkIfAuthenticated(true);
             padding-right: 10px
         }
 
-        #fullscreenbuttondiv {
+        #micbuttondiv {
             position: fixed;
             bottom: 10px;
             left: 10px;
@@ -284,9 +284,9 @@ $CONFIG->checkIfAuthenticated(true);
                                                                              alt="Modus auswählen">
     </button>
 </div>
-<div id="fullscreenbuttondiv">
-    <button class="bottom-button" onclick="toggleFullscreen()" id="fullscreenbutton"><img class="bottom-img" src="incl/img/fullscreen.svg"
-                                                                             alt="Vollbild an-/ausschalten">
+<div id="micbuttondiv">
+    <button class="bottom-button" onclick="startMicListening()" id="micbutton"><img class="bottom-img" src="incl/img/mic.svg"
+                                                                             alt="Mikrofon anschalten">
     </button>
 </div>
 
@@ -379,25 +379,10 @@ $CONFIG->checkIfAuthenticated(true);
         }
     }
 
-    function toggleFullscreen() {
+    function startMicListening() {
         let xhttp = new XMLHttpRequest();
         xhttp.open("POST", "http://localhost:1234/start_listening", true);
         xhttp.send();
-        return;
-
-        if (!wakeLockEnabled) {
-            noSleep.enable();
-            wakeLockEnabled = true;
-            <?php if (BBConfig::getInstance()["WS_FULLSCREEN"]) {
-            echo " document.documentElement.requestFullscreen();";
-            }?>
-        } else {
-            noSleep.disable();
-            <?php if (BBConfig::getInstance()["WS_FULLSCREEN"]) {
-            echo " document.exitFullscreen();";
-        } ?>
-            wakeLockEnabled = false;
-        }
     }
 
 

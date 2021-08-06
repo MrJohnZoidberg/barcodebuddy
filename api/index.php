@@ -152,7 +152,7 @@ class BBuddyApi {
             if (isset($_POST["id"]))
                 $id = $_POST["id"];
             if ($name == "" and $id == "")
-                return self::createResultArray(null, "No name supplied", 400);
+                return self::createResultArray(null, "No name or id supplied", 400);
             else if ($id != "") {
                 $result = processNewProductId(sanitizeString($id));
                 return self::createResultArray(array("result" => sanitizeString($result)));
