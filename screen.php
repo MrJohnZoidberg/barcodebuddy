@@ -168,6 +168,10 @@ $CONFIG->checkIfAuthenticated(true);
             text-align: center;
         }
 
+        *:focus {
+            outline: none;
+        }
+
         .bottom-button {
             background-color: #497C8D;
             color: white;
@@ -285,8 +289,9 @@ $CONFIG->checkIfAuthenticated(true);
     </button>
 </div>
 <div id="micbuttondiv">
-    <button class="bottom-button" onclick="startMicListening()" id="micbutton"><img class="bottom-img" src="incl/img/mic.svg"
-                                                                             alt="Mikrofon anschalten">
+    <button class="bottom-button" onclick="toggleMicListening()" id="micbutton"><img class="bottom-img" id="micimg"
+                                                                                    src="incl/img/mic.svg"
+                                                                                    alt="Mikrofon an-/ausschalten">
     </button>
 </div>
 
@@ -357,6 +362,7 @@ $CONFIG->checkIfAuthenticated(true);
     var noSleep = new NoSleep();
     var wakeLockEnabled = false;
     var isFirstStart = true;
+    var micMuted = true;
 
 
     function goHome() {
@@ -379,12 +385,22 @@ $CONFIG->checkIfAuthenticated(true);
         }
     }
 
-    function startMicListening() {
+    function toggleMicListening() {
+        if (micMuted) {
+            document.getElementById("micimg").src = "incl/img/mic_off.svg";
+            micMuted = false;
+        } else {
+            document.getElementById("micimg").src = "incl/img/mic.svg";
+            micMuted = true;
+        }
         let xhttp = new XMLHttpRequest();
-        xhttp.open("POST", "http://localhost:1234/start_listening", true);
+        xhttp.open("POST", "http://localhost:1234/toggle_listening", true);
         xhttp.send();
     }
 
+    function resetMicImg() {
+        document.getElementById("micimg").src = "incl/img/mic.svg";
+    }
 
     function syncCache() {
         var xhttp = new XMLHttpRequest();
@@ -475,6 +491,9 @@ $CONFIG->checkIfAuthenticated(true);
                     break;
                 case '6':
                     resultScan("#deb853", "Keine ähnlichen Produkte gefunden", null, "beep_nosuccess");
+                    break;
+                case '7':
+                    resetMicImg();
                     break;
                 case 'E':
                     document.getElementById('content').style.backgroundColor = '#e06a4e';

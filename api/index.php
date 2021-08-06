@@ -162,6 +162,11 @@ class BBuddyApi {
             }
         }));
 
+        $this->addRoute(new ApiRoute("/action/info_stop_listening", function () {
+            sendWebsocketMessage(null, WS_RESULT_STOP_LISTENING);
+            return self::createResultArray(array("result" => "success"));
+        }));
+
         $this->addRoute(new ApiRoute("/state/getmode", function () {
             return self::createResultArray(array(
                 "mode" => DatabaseConnection::getInstance()->getTransactionState()

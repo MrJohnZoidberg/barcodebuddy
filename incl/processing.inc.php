@@ -203,6 +203,7 @@ const WS_RESULT_PRODUCT_UNKNOWN   = 2;
 const WS_RESULT_MODE_CHANGE       = 4;
 const WS_RESULT_CHOOSE_PRODUCT    = 5;
 const WS_RESULT_NO_FUZZY_RESULTS  = 6;
+const WS_RESULT_STOP_LISTENING    = 7;
 const WS_RESULT_ERROR             = 'E';
 
 
