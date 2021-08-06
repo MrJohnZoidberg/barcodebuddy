@@ -66,6 +66,18 @@ function sendNewState($newState) {
     }
 }
 
+function sendProductsList($products) {
+    global $CONFIG;
+    $client = getClient();
+    if ($client->connect('127.0.0.1', $CONFIG->PORT_WEBSOCKET_SERVER, '/screen')) {
+        $payload = json_encode(array(
+            'action' => 'chooseproducts',
+            'data'   => $products
+        ));
+        $client->sendData($payload);
+    }
+}
+
 function getClient() {
     require_once __DIR__ . '/php-websocket/src/Client.php';
     return new \Bloatless\WebSocket\Client;

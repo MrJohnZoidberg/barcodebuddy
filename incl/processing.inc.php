@@ -16,8 +16,7 @@
  * @since      File available since Release 1.0
  */
 
-use Fuse\Fuse;
-
+require_once __DIR__ . "/../vendor/autoload.php";
 require_once __DIR__ . "/lockGenerator.inc.php";
 require_once __DIR__ . "/db.inc.php";
 require_once __DIR__ . "/config.inc.php";
@@ -109,7 +108,10 @@ function processNewProductName(string $text): string {
     $productNamesIds = array();
     foreach ($allProducts as $product) {
         if (!isset($product["id"]) || !isset($product['name'])) continue;
-        $productNamesIds[$product['name']] = $product["id"];
+        $productNamesIds[] = [
+            "name" => $product['name'],
+            "id" => $product["id"]
+        ];
         if (strtolower($product['name']) == $textLower) {
             $productInfo = API::getProductInfo($product['id']);
             $lockGenerator    = new LockGenerator();
@@ -119,8 +121,18 @@ function processNewProductName(string $text): string {
         }
     }
 
-    $fuse = new Fuse(array_keys($productNamesIds));
+    $fuse = new \Fuse\Fuse($productNamesIds, [
+        "keys" => [ "name" ],
+    ]);
     $results = $fuse->search($textLower);
+    if (count($results) == 0) {
+        return "no product with fuzzy search found";
+    } else {
+        sendProductsListForChoosing($results);
+        return "user has to choose between products";
+    }
+
+
     $productInfo = API::getProductInfo($results[0]);
     $lockGenerator    = new LockGenerator();
     $lockGenerator->createLock();

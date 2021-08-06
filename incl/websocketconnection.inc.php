@@ -42,3 +42,8 @@ function sendWebsocketStateChange($newState) {
     sendNewState($newState);
 }
 
+function sendProductsListForChoosing($products) {
+    require_once __DIR__ . "/websocket/client_internal.php";
+    sendProductsList($products);
+}
+
