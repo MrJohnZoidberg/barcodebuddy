@@ -72,7 +72,7 @@ function sendProductsList($products) {
     if ($client->connect('127.0.0.1', $CONFIG->PORT_WEBSOCKET_SERVER, '/screen')) {
         $payload = json_encode(array(
             'action' => 'chooseproducts',
-            'data'   => $products
+            'data'   => '5' . json_encode($products)
         ));
         $client->sendData($payload);
     }

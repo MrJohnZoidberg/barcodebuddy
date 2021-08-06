@@ -131,4 +131,18 @@ class ScreenApplication extends Application {
 		}
 	}
     }
+
+    /**
+     * Sends product list to client(s).
+     *
+     * @param string $text
+     * @return void
+     */
+    private function actionChooseproducts(string $text): void
+    {
+        $encodedData = $this->encodeData('chooseproducts', $text);
+        foreach ($this->clients as $sendto) {
+            $sendto->send($encodedData);
+        }
+    }
 }

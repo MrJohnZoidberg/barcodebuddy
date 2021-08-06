@@ -305,6 +305,12 @@ $CONFIG->checkIfAuthenticated(true);
     </div>
 </div>
 
+<div id="productChooser" class="overlay">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <div class="overlay-content" id="productContainer">
+    </div>
+</div>
+
 <script>
 
     function openNav() {
@@ -313,6 +319,20 @@ $CONFIG->checkIfAuthenticated(true);
 
     function closeNav() {
         document.getElementById("myNav").style.height = "0%";
+    }
+
+    function openProductChooser(productArray) {
+        let innerHTMLProducts = "";
+        for(let product in productArray) {
+            let innerHTMLProduct = "<a href=\"#\" onclick=\"sendProduct(" + product['id'] + ")\">" + product['name'] + "</a>";
+            String.prototype.concat(innerHTMLProducts, innerHTMLProduct);
+        }
+        document.getElementById("productContainer").innerHTML = innerHTMLProducts;
+        document.getElementById("productChooser").style.height = "100%";
+    }
+
+    function closeProductChooser() {
+        document.getElementById("productChooser").style.height = "0%";
     }
 
     function sendBarcode(barcode) {
@@ -325,6 +345,10 @@ $CONFIG->checkIfAuthenticated(true);
     function sendQuantity() {
         var q = prompt('Menge eingeben', '1');
         sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_Q"] ?>' + q);
+    }
+
+    function sendProduct(productId) {
+
     }
 
     var noSleep = new NoSleep();
@@ -455,6 +479,10 @@ $CONFIG->checkIfAuthenticated(true);
                     break;
                 case '4':
                     document.getElementById('mode').textContent = resultText;
+                    break;
+                case '5':
+                    resultScan("#60837a", "Bitte Produkt wählen", resultText, "beep_success");
+                    openProductChooser(JSON.parse(resultText))
                     break;
                 case 'E':
                     document.getElementById('content').style.backgroundColor = '#e06a4e';
