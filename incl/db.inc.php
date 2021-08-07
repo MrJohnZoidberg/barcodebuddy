@@ -238,14 +238,17 @@ class DatabaseConnection {
         $res = $this->db->query("SELECT * FROM TransactionState");
         if ($row = $res->fetchArray()) {
             $state = $row["currentState"];
-            $since = $row["since"];
+            $revert_time = BBConfig::getInstance()["REVERT_TIME"];
+            if ($revert_time <= 0) {
+                return $state;
+            }
             if ($state == STATE_CONSUME) {
                 return STATE_CONSUME;
             } else {
-                $stateSet            = strtotime($since);
+                $stateSet            = strtotime($row["since"]);
                 $now                 = strtotime($this->getDbTimeInLC());
                 $differenceInMinutes = round(abs($now - $stateSet) / 60, 0);
-                if ($differenceInMinutes > BBConfig::getInstance()["REVERT_TIME"]) {
+                if ($differenceInMinutes > $revert_time) {
                     $this->setTransactionState(STATE_CONSUME);
                     return STATE_CONSUME;
                 } else {
@@ -315,7 +318,7 @@ class DatabaseConnection {
      */
     public function getStoredBarcodeName($barcode): ?string {
         $res = $this->db->query("SELECT * FROM Barcodes WHERE barcode='$barcode'");
-        if ($row = $res->fetchArray() and isset($row['name'])) {
+        if ($row = $res->fetchArray() and isset($row['name']) and $row['name'] != "N/A") {
             return $row['name'];
         } else {
             return null;

@@ -452,11 +452,12 @@ $CONFIG->checkIfAuthenticated(true);
             document.getElementById('scan-result').textContent = text;
             document.getElementById(sound).play();
             if (text != null) {
-                let logEntries = '\r\n' + text + document.getElementById('log-entries').innerText;
                 let limit = 3;
-                let logEntriesLimit = "";
-                logEntries.split('\r\n').slice(0, limit+1).map(i => {logEntriesLimit = logEntriesLimit + i;});
-                document.getElementById('log-entries').innerText = logEntriesLimit;
+                let logEntries = "";
+                document.getElementById('log-entries').innerText.split('\n', limit).map(i => {
+                    logEntries = logEntries + i + '\n';
+                });
+                document.getElementById('log-entries').innerText = '\n' + text + logEntries;
             }
             currentScanId++;
             resetScan(currentScanId);
