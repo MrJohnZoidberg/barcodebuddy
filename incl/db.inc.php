@@ -309,6 +309,20 @@ class DatabaseConnection {
     }
 
     /**
+     * Returns stored name of saved barcodes that is not associated with a product yet
+     * @param $barcode
+     * @return string|null
+     */
+    public function getStoredBarcodeName($barcode): ?string {
+        $res = $this->db->query("SELECT * FROM Barcodes WHERE barcode='$barcode'");
+        if ($row = $res->fetchArray() and isset($row['name'])) {
+            return $row['name'];
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Returns stored amount of saved barcodes that is not associated with a product yet
      * Not to be confused with default amount for barcodes
      * @param $barcode

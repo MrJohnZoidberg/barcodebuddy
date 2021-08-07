@@ -163,7 +163,7 @@ $CONFIG->checkIfAuthenticated(true);
         }
 
         .h5 {
-            font: bold 1em jost-bold;
+            font: bold 0.8em jost-medium;
             margin: auto;
             text-align: center;
         }
@@ -211,7 +211,7 @@ $CONFIG->checkIfAuthenticated(true);
 
         .overlay-content {
             position: relative;
-            top: 25%;
+            top: 12%;
             width: 100%;
             text-align: center;
             margin-top: 30px;
@@ -452,7 +452,11 @@ $CONFIG->checkIfAuthenticated(true);
             document.getElementById('scan-result').textContent = text;
             document.getElementById(sound).play();
             if (text != null) {
-                document.getElementById('log-entries').innerText = '\r\n' + text + document.getElementById('log-entries').innerText;
+                let logEntries = '\r\n' + text + document.getElementById('log-entries').innerText;
+                let limit = 3;
+                let logEntriesLimit = "";
+                logEntries.split('\r\n').slice(0, limit+1).map(i => {logEntriesLimit = logEntriesLimit + i;});
+                document.getElementById('log-entries').innerText = logEntriesLimit;
             }
             currentScanId++;
             resetScan(currentScanId);

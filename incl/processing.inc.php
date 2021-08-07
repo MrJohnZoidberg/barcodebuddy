@@ -243,10 +243,17 @@ function processUnknownBarcode(string $barcode, bool $websocketEnabled, LockGene
     if ($db->isUnknownBarcodeAlreadyStored($barcode)) {
         //Unknown barcode already in local database
         $db->addQuantityToUnknownBarcode($barcode, $amount);
-        if ($state == STATE_PURCHASE) {
-            $msg_log = "Unbekanntes Produkt schon mal gescannt worden, Menge wird erhöht.";
+        $productname = $db->getStoredBarcodeName($barcode);
+        $amount_stock = $db->getStoredBarcodeAmount($barcode);
+        if (isset($productname)) {
+            $msg_log = $productname . " (nicht in Grocy): ";
         } else {
-            $msg_log = "Unbekanntes Produkt schon mal gescannt worden, Menge wird verringert.";
+            $msg_log = "Unbekanntes Produkt (nicht in Grocy): ";
+        }
+        if ($state == STATE_PURCHASE) {
+            $msg_log = $msg_log . "Menge wird auf " . $amount_stock . " erhöht.";
+        } else {
+            $msg_log = $msg_log . "Menge wird auf " . $amount_stock . " verringert.";
         }
         $log    = new LogOutput($msg_log, EVENT_TYPE_ADD_NEW_BARCODE, $barcode);
         $output = $log
