@@ -302,7 +302,7 @@ $CONFIG->checkIfAuthenticated(true);
         <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_P"] ?>')">Einkaufen</a>
         <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_C"] ?>')">Verbrauchen</a>
         <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_O"] ?>')">Öffnen</a>
-        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_GS"] ?>')">Inventur</a>
+        <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_GS"] ?>')">Bestand anzeigen</a>
         <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_AS"] ?>')">Zur Einkaufsliste hinzufügen</a>
         <a href="#" onclick="sendQuantity()">Menge festlegen</a>
         <a href="#" onclick="sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_CA"] ?>')">Alle verbrauchen</a>

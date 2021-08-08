@@ -158,7 +158,7 @@ function createLogModeChange(int $state): string {
             $text .= "Öffnen";
             break;
         case STATE_GETSTOCK:
-            $text .= "Inventur";
+            $text .= "Bestand anzeigen";
             break;
         case STATE_ADD_SL:
             $text .= "Einkaufsliste";
@@ -303,7 +303,7 @@ function stateToString(int $state): string {
         STATE_CONSUME_ALL     => "Alle verbrauchen",
         STATE_PURCHASE        => "Einkaufen",
         STATE_OPEN            => "Öffnen",
-        STATE_GETSTOCK        => "Inventur",
+        STATE_GETSTOCK        => "Bestand anzeigen",
         STATE_ADD_SL          => "Zur Einkaufsliste hinzufügen"
     );
     return $allowedModes[$state];

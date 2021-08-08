@@ -34,7 +34,7 @@ class ScreenApplication extends Application {
     // current mode is stored
     private $currentBBMode = "Verbrauchen";
     //Only these modes are allowed as input
-    private $allowedModes = array("Verbrauchen", "Verbrauchen (verdorben)", "Einkaufen", "Öffnen", "Inventur", "Menge", "Zur Einkaufsliste hinzufügen");
+    private $allowedModes = array("Verbrauchen", "Verbrauchen (verdorben)", "Einkaufen", "Öffnen", "Bestand anzeigen", "Menge festlegen", "Zur Einkaufsliste hinzufügen");
 
     /**
      * @var array $clients
