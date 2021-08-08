@@ -409,7 +409,15 @@ function getHtmlMainMenuTableKnown(array $barcodes): string {
                     ->setIsAccent()
                     ->setValue($item['id'])
                     ->setId('button_consume_' . $item['id'])
-                    ->generate(true));
+                    ->generate(true) . ' ' .
+                    $html->buildButton("button_link", "Barcode verknüpfen")
+                        ->setDisabled($isDisabled)
+                        ->setSubmit()
+                        ->setRaised()
+                        ->setIsAccent()
+                        ->setValue($item['id'])
+                        ->setId('button_link_' . $item['id'])
+                        ->generate(true));
             } else {
                 $table->addCell('<select style="max-width: 20em;" onchange=\'enableButtonSingle("select_' . $itemId . '", "button_add_' . $itemId . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
                 $table->addCell($html->buildButton("button_add", "Hinzufügen")
@@ -493,7 +501,15 @@ function getHtmlMainMenuTableUnknown(array $barcodes): string {
                     ->setIsAccent()
                     ->setValue($item['id'])
                     ->setId('button_consume_' . $item['id'])
-                    ->generate(true));
+                    ->generate(true) . ' ' .
+                    $html->buildButton("button_link", "Barcode verknüpfen")
+                        ->setDisabled($isDisabled)
+                        ->setSubmit()
+                        ->setRaised()
+                        ->setIsAccent()
+                        ->setValue($item['id'])
+                        ->setId('button_link_' . $item['id'])
+                        ->generate(true));
             } else {
                 $table->addCell('<select style="max-width: 20em;" onchange=\'enableButtonSingle("select_' . $itemId . '", "button_add_' . $itemId . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
                 $table->addCell($html->buildButton("button_add", "Hinzufügen")
