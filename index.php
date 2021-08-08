@@ -401,7 +401,7 @@ function getHtmlMainMenuTableKnown(array $barcodes): string {
                         ->setId('button_link_' . $item['id'])
                         ->generate(true));
             } else if ($item['amount'] < 0) {
-                $table->addCell('<select style="max-width: 20em;" onchange=\'enableButtonSingle("select_' . $itemId . '", "button_consume_' . $itemId . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
+                $table->addCell('<select style="max-width: 20em;" onchange=\'enableButton("select_' . $itemId . '", "button_consume_' . $itemId . '", "button_link_' . $item['id'] . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
                 $table->addCell($html->buildButton("button_consume", "Verbrauchen")
                     ->setDisabled($isDisabled)
                     ->setSubmit()
@@ -409,7 +409,7 @@ function getHtmlMainMenuTableKnown(array $barcodes): string {
                     ->setIsAccent()
                     ->setValue($item['id'])
                     ->setId('button_consume_' . $item['id'])
-                    ->generate(true) . ' ' .
+                    ->generate(true) . '</br></br>' .
                     $html->buildButton("button_link", "Barcode verknüpfen")
                         ->setDisabled($isDisabled)
                         ->setSubmit()
@@ -493,15 +493,15 @@ function getHtmlMainMenuTableUnknown(array $barcodes): string {
                     ->setId('button_link_' . $item['id'])
                     ->generate(true));
             } else if ($item['amount'] < 0) {
-                $table->addCell('<select style="max-width: 20em;" onchange=\'enableButtonSingle("select_' . $itemId . '", "button_consume_' . $itemId . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
+                $table->addCell('<select style="max-width: 20em;" onchange=\'enableButton("select_' . $itemId . '", "button_consume_' . $itemId . '", "button_link_' . $item['id'] . '")\' id="select_' . $itemId . '" name="select_' . $itemId . '">' . printSelections($item['match'], $productinfo) . '</select>');
                 $table->addCell($html->buildButton("button_consume", "Verbrauchen")
-                    ->setDisabled($isDisabled)
-                    ->setSubmit()
-                    ->setRaised()
-                    ->setIsAccent()
-                    ->setValue($item['id'])
-                    ->setId('button_consume_' . $item['id'])
-                    ->generate(true) . ' ' .
+                        ->setDisabled($isDisabled)
+                        ->setSubmit()
+                        ->setRaised()
+                        ->setIsAccent()
+                        ->setValue($item['id'])
+                        ->setId('button_consume_' . $item['id'])
+                        ->generate(true) . '</br></br>' .
                     $html->buildButton("button_link", "Barcode verknüpfen")
                         ->setDisabled($isDisabled)
                         ->setSubmit()
