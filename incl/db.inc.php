@@ -526,6 +526,7 @@ class DatabaseConnection {
             } else {
                 $logEntry = $date . ": " . sanitizeString($log);
             }
+            $this->db->exec("DELETE FROM BarcodeLogs WHERE id NOT IN (SELECT id FROM BarcodeLogs ORDER BY id DESC LIMIT 100)");
             $this->db->exec("INSERT INTO BarcodeLogs(log) VALUES('" . $logEntry . "')");
         }
     }
