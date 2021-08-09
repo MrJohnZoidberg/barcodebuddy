@@ -361,10 +361,12 @@ $CONFIG->checkIfAuthenticated(true);
 
     function sendProduct(product) {
         var xhttp = new XMLHttpRequest();
-        if (product.id !== -1 || !("sent_product_name" in product)) {
+        if (product.id !== -1) {
             xhttp.open("GET", "./api/action/product?id=" + product.id, true);
-        } else {
+        } else if ("sent_product_name" in product) {
             xhttp.open("GET", "./api/action/product?id=-1&name=" + product.sent_product_name, true);
+        } else {
+            xhttp.open("GET", "./api/action/product?id=-1&name=" + product.name, true);
         }
         xhttp.send();
         closeProductChooser();
