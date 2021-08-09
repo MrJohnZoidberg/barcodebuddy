@@ -16,6 +16,8 @@
  * @since      File available since Release 1.0
  */
 
+use Fuse\Fuse;
+
 require_once __DIR__ . "/../vendor/autoload.php";
 require_once __DIR__ . "/lockGenerator.inc.php";
 require_once __DIR__ . "/db.inc.php";
@@ -102,9 +104,23 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
 
 function processNewProductName(string $text, bool $createProduct = false): string {
     if ($createProduct) {
-        $lockGenerator    = new LockGenerator();
+        $lockGenerator = new LockGenerator();
         $lockGenerator->createLock();
         processUnknownBarcode(null, $text, true, $lockGenerator, null, null);
+        return "success";
+    }
+
+    $db = DatabaseConnection::getInstance();
+    if ($db->isUnknownProductNameAlreadyStored($text)) {
+        $lockGenerator = new LockGenerator();
+        $lockGenerator->createLock();
+        processUnknownBarcode(null, $text, true, $lockGenerator, null, null);
+        return "success";
+    }
+    if ($db->isUnknownProductNameAlreadyStored(ucfirst($text))) {
+        $lockGenerator = new LockGenerator();
+        $lockGenerator->createLock();
+        processUnknownBarcode(null, ucfirst($text), true, $lockGenerator, null, null);
         return "success";
     }
 
@@ -127,16 +143,23 @@ function processNewProductName(string $text, bool $createProduct = false): strin
             return "success";
         }
     }
+    $barcodesUnknown = $db->getStoredBarcodes()["unknown"];
+    foreach ($barcodesUnknown as $item) {
+        if ($item["barcode"] != "N/A") continue;
+        $productNamesIds[] = [
+            "name" => $item['name'],
+            "id" => -1
+        ];
+    }
 
-    $fuse = new \Fuse\Fuse($productNamesIds, [
+    $fuse = new Fuse($productNamesIds, [
         "keys" => [ "name" ],
     ]);
     $results = $fuse->search($textLower);
-    if (count($results) == 0) {
+    if (count($results) == 0 && $db->getTransactionState() != STATE_PURCHASE) {
         sendWebsocketMessage(null, WS_RESULT_NO_FUZZY_RESULTS);
         return "no product with fuzzy search found";
     } else {
-        $db = DatabaseConnection::getInstance();
         if ($db->getTransactionState() == STATE_PURCHASE) {
             $createNewProduct = [
                 "name" => "Neues Produkt erstellen: " . ucfirst($text),

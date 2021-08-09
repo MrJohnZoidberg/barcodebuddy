@@ -328,6 +328,7 @@ $CONFIG->checkIfAuthenticated(true);
 
     function openProductChooser(productArray) {
         let productContainer = document.getElementById("productContainer");
+        productContainer.textContent = '';
         for (let i = 0; i < productArray.length; i++) {
             let product = productArray[i];
             let item = document.createElement('a');
