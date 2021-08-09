@@ -347,7 +347,7 @@ class DatabaseConnection {
      * @return int
      */
     public function getStoredBarcodeAmountFromProductName($name): int {
-        $res = $this->db->query("SELECT * FROM Barcodes WHERE barcode='$name'");
+        $res = $this->db->query("SELECT * FROM Barcodes WHERE name='$name'");
         if ($row = $res->fetchArray()) {
             return $row['amount'];
         } else {
