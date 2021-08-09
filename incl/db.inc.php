@@ -331,8 +331,23 @@ class DatabaseConnection {
      * @param $barcode
      * @return int
      */
-    public function getStoredBarcodeAmount($barcode): int {
+    public function getStoredBarcodeAmountFromBarcode($barcode): int {
         $res = $this->db->query("SELECT * FROM Barcodes WHERE barcode='$barcode'");
+        if ($row = $res->fetchArray()) {
+            return $row['amount'];
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * Returns stored amount of saved product name that is not associated with a product yet
+     * Not to be confused with default amount for barcodes
+     * @param $name
+     * @return int
+     */
+    public function getStoredBarcodeAmountFromProductName($name): int {
+        $res = $this->db->query("SELECT * FROM Barcodes WHERE barcode='$name'");
         if ($row = $res->fetchArray()) {
             return $row['amount'];
         } else {
@@ -373,12 +388,32 @@ class DatabaseConnection {
     }
 
     /**
+     * Returns true if an unknown product with name is already in the list
+     * @param $name
+     * @return bool
+     */
+    public function isUnknownProductNameAlreadyStored($name): bool {
+        $count = $this->db->querySingle("SELECT COUNT(*) as count FROM Barcodes WHERE name='$name'");
+        return ($count != 0);
+    }
+
+    /**
      * Increases quantity of a saved barcode (not to confuse with default quantity)
      * @param $barcode
      * @param $amount
      */
     public function addQuantityToUnknownBarcode($barcode, $amount) {
         $this->db->exec("UPDATE Barcodes SET amount = amount + $amount WHERE barcode = '$barcode'");
+
+    }
+
+    /**
+     * Increases quantity of a saved product with name
+     * @param $name
+     * @param $amount
+     */
+    public function addQuantityToUnknownProductName($name, $amount) {
+        $this->db->exec("UPDATE Barcodes SET amount = amount + $amount WHERE name = '$name'");
 
     }
 
@@ -393,16 +428,21 @@ class DatabaseConnection {
 
     /**
      * Add an unknown barcode
-     * @param string $barcode
+     * @param string|null $barcode
      * @param int $amount
      * @param string|null $bestBeforeInDays
      * @param string|null $price
      * @param array|null $productname
-     * @param int $match
      */
-    public function insertUnrecognizedBarcode(string $barcode, int $amount = 1, string $bestBeforeInDays = null, string $price = null, ?array $productname = null) {
+    public function insertUnrecognizedBarcode(?string $barcode, ?array $productname = null, int $amount = 1, string $bestBeforeInDays = null, string $price = null) {
+        if ($productname == null && $barcode == null) {
+            return;
+        }
         if ($bestBeforeInDays == null)
             $bestBeforeInDays = "NULL";
+
+        if ($barcode == null)
+            $barcode = "N/A";
 
         if ($productname == null) {
             $name     = "N/A";

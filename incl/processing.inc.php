@@ -93,14 +93,21 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
     $productInfoFromBarcode = API::getProductByBarcode($sanitizedBarcode);
     if ($productInfoFromBarcode == null) {
         $db->saveLastBarcode($sanitizedBarcode);
-        return processUnknownBarcode($sanitizedBarcode, true, $lockGenerator, $bestBeforeInDays, $price);
+        return processUnknownBarcode($sanitizedBarcode, null, true, $lockGenerator, $bestBeforeInDays, $price);
     } else {
         $db->saveLastBarcode($sanitizedBarcode, $productInfoFromBarcode->name);
         return processKnownBarcode($productInfoFromBarcode, true, $lockGenerator, $sanitizedBarcode, $bestBeforeInDays, $price);
     }
 }
 
-function processNewProductName(string $text): string {
+function processNewProductName(string $text, bool $createProduct = false): string {
+    if ($createProduct) {
+        $lockGenerator    = new LockGenerator();
+        $lockGenerator->createLock();
+        processUnknownBarcode(null, $text, true, $lockGenerator, null, null);
+        return "success";
+    }
+
     $allProducts = API::getAllProducts();
     if (!isset($allProducts)) return "products could not be loaded";
 
@@ -129,6 +136,15 @@ function processNewProductName(string $text): string {
         sendWebsocketMessage(null, WS_RESULT_NO_FUZZY_RESULTS);
         return "no product with fuzzy search found";
     } else {
+        $db = DatabaseConnection::getInstance();
+        if ($db->getTransactionState() == STATE_PURCHASE) {
+            $createNewProduct = [
+                "name" => "Neues Produkt erstellen: " . ucfirst($text),
+                "sent_product_name" => ucfirst($text),
+                "id" => -1
+            ];
+            array_unshift($results, $createNewProduct);
+        }
         sendProductsListForChoosing($results);
         return "user has to choose between products";
     }
@@ -230,21 +246,31 @@ function processChoreBarcode(string $barcode) {
  * @return string
  * @throws DbConnectionDuringEstablishException
  */
-function processUnknownBarcode(string $barcode, bool $websocketEnabled, LockGenerator &$fileLock, ?string $bestBeforeInDays, ?string $price): string {
+function processUnknownBarcode(?string $barcode, ?string $productname, bool $websocketEnabled, LockGenerator &$fileLock, ?string $bestBeforeInDays, ?string $price): string {
+    if (!isset($barcode) && !isset($productname)) {
+        $fileLock->removeLock();
+        return "Failed to process unknown barcode";
+    }
     $db     = DatabaseConnection::getInstance();
     $amount = 1;
     $state = $db->getTransactionState();
-    if ($state == STATE_PURCHASE) {
+    if ($state == STATE_PURCHASE && isset($barcode)) {
         $amount = QuantityManager::getStoredQuantityForBarcode($barcode);
     }
     if ($state == STATE_CONSUME) {
         $amount = -$amount;
     }
-    if ($db->isUnknownBarcodeAlreadyStored($barcode)) {
+    if (isset($barcode) && $db->isUnknownBarcodeAlreadyStored($barcode) || isset($productname) && $db->isUnknownProductNameAlreadyStored($productname)) {
         //Unknown barcode already in local database
-        $db->addQuantityToUnknownBarcode($barcode, $amount);
-        $productname = $db->getStoredBarcodeName($barcode);
-        $amount_stock = $db->getStoredBarcodeAmount($barcode);
+        if (isset($barcode)) {
+            $db->addQuantityToUnknownBarcode($barcode, $amount);
+            $productname = $db->getStoredBarcodeName($barcode);
+            $amount_stock = $db->getStoredBarcodeAmountFromBarcode($barcode);
+        } else {
+            $db->addQuantityToUnknownProductName($productname, $amount);
+            $amount_stock = $db->getStoredBarcodeAmountFromProductName($productname);
+        }
+
         if (isset($productname)) {
             $msg_log = $productname . " (nicht in Grocy): ";
         } else {
@@ -257,7 +283,7 @@ function processUnknownBarcode(string $barcode, bool $websocketEnabled, LockGene
         }
         $log    = new LogOutput($msg_log, EVENT_TYPE_ADD_NEW_BARCODE, $barcode);
         $output = $log
-            ->insertBarcodeInWebsocketText()
+            ->insertBarcodeInWebsocketText(isset($barcode))
             ->setSendWebsocket($websocketEnabled)
             ->setWebsocketResultCode(WS_RESULT_PRODUCT_LOOKED_UP)
             ->createLog();
@@ -267,7 +293,7 @@ function processUnknownBarcode(string $barcode, bool $websocketEnabled, LockGene
             $productname = BarcodeLookup::lookup($barcode);
         }
         if ($productname != null) {
-            $db->insertUnrecognizedBarcode($barcode, $amount, $bestBeforeInDays, $price, $productname);
+            $db->insertUnrecognizedBarcode($barcode, $productname, $amount, $bestBeforeInDays, $price);
             $log    = new LogOutput("Unbekannter Barcode nachgeschlagen, gefundener Name: " . $productname["name"], EVENT_TYPE_ADD_NEW_BARCODE, $barcode);
             $output = $log
                 ->insertBarcodeInWebsocketText()
@@ -276,7 +302,7 @@ function processUnknownBarcode(string $barcode, bool $websocketEnabled, LockGene
                 ->setWebsocketResultCode(WS_RESULT_PRODUCT_LOOKED_UP)
                 ->createLog();
         } else {
-            $db->insertUnrecognizedBarcode($barcode, $amount, $bestBeforeInDays, $price);
+            $db->insertUnrecognizedBarcode($barcode, null, $amount, $bestBeforeInDays, $price);
             $log    = new LogOutput("Unbekannter Barcode wurde in keiner Datenbank gefunden.", EVENT_TYPE_ADD_UNKNOWN_BARCODE, $barcode);
             $output = $log
                 ->insertBarcodeInWebsocketText()
@@ -649,7 +675,7 @@ function changeQuantityAfterScan(int $amount) {
             QuantityManager::addUpdateEntry($barcode, $amount);
         }
     }
-    if ($db->getStoredBarcodeAmount($barcode) == 1) {
+    if ($db->getStoredBarcodeAmountFromBarcode($barcode) == 1) {
         $db->setQuantityToUnknownBarcode($barcode, $amount);
     }
 }
@@ -803,8 +829,8 @@ class LogOutput {
         return $this;
     }
 
-    public function insertBarcodeInWebsocketText(): LogOutput {
-        if ($this->barcode != null)
+    public function insertBarcodeInWebsocketText(bool $insert = true): LogOutput {
+        if ($insert && $this->barcode != null)
             $this->websocketText .= " Barcode: $this->barcode";
         return $this;
     }

@@ -157,7 +157,7 @@ class BBuddyApi {
                 $result = processNewProductId(sanitizeString($id));
                 return self::createResultArray(array("result" => sanitizeString($result)));
             } else {
-                $result = processNewProductName(sanitizeString($name));
+                $result = processNewProductName(sanitizeString($name), $id == "-1");
                 return self::createResultArray(array("result" => sanitizeString($result)));
             }
         }));

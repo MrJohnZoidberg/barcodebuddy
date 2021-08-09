@@ -327,12 +327,15 @@ $CONFIG->checkIfAuthenticated(true);
     }
 
     function openProductChooser(productArray) {
-        let innerHTMLProducts = "";
+        let productContainer = document.getElementById("productContainer");
         for (let i = 0; i < productArray.length; i++) {
             let product = productArray[i];
-            innerHTMLProducts = innerHTMLProducts + "<a href=\"#\" onclick=\"sendProduct(" + product.id + ")\">" + product.name + "</a>";
+            let item = document.createElement('a');
+            item.setAttribute('href', "#");
+            item.onclick = function() { sendProduct(product); }
+            item.appendChild(document.createTextNode(product.name));
+            productContainer.appendChild(item);
         }
-        document.getElementById("productContainer").innerHTML = innerHTMLProducts;
         document.getElementById("productChooser").style.height = "100%";
     }
 
@@ -355,9 +358,13 @@ $CONFIG->checkIfAuthenticated(true);
         sendBarcode('<?php echo BBConfig::getInstance()["BARCODE_Q"] ?>' + q);
     }
 
-    function sendProduct(productId) {
+    function sendProduct(product) {
         var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "./api/action/product?id=" + productId, true);
+        if (product.id !== -1 || !("sent_product_name" in product)) {
+            xhttp.open("GET", "./api/action/product?id=" + product.id, true);
+        } else {
+            xhttp.open("GET", "./api/action/product?id=-1&name=" + product.sent_product_name, true);
+        }
         xhttp.send();
         closeProductChooser();
     }
