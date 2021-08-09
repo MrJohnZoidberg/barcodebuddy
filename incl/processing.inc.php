@@ -260,6 +260,7 @@ function processUnknownBarcode(?string $barcode, ?string $productname, bool $web
     if ($state == STATE_CONSUME) {
         $amount = -$amount;
     }
+    $nameAlreadyGiven = isset($productname);
     if (isset($barcode) && $db->isUnknownBarcodeAlreadyStored($barcode) || isset($productname) && $db->isUnknownProductNameAlreadyStored($productname)) {
         //Unknown barcode already in local database
         if (isset($barcode)) {
@@ -288,17 +289,25 @@ function processUnknownBarcode(?string $barcode, ?string $productname, bool $web
             ->setWebsocketResultCode(WS_RESULT_PRODUCT_LOOKED_UP)
             ->createLog();
     } else {
-        $productname = null;
-        if (is_numeric($barcode)) {
-            $productname = BarcodeLookup::lookup($barcode);
+        $altNames = null;
+        if (isset($barcode) && is_numeric($barcode)) {
+            $lookupResult = BarcodeLookup::lookup($barcode);
+            if ($lookupResult != null) {
+                $productname = $lookupResult["name"];
+                $altNames = $lookupResult["altNames"];
+            }
         }
         if ($productname != null) {
-            $db->insertUnrecognizedBarcode($barcode, $productname, $amount, $bestBeforeInDays, $price);
-            $log    = new LogOutput("Unbekannter Barcode nachgeschlagen, gefundener Name: " . $productname["name"], EVENT_TYPE_ADD_NEW_BARCODE, $barcode);
+            $db->insertUnrecognizedBarcode($barcode, $productname, $altNames, $amount, $bestBeforeInDays, $price);
+            if (!$nameAlreadyGiven) {
+                $log = new LogOutput("Unbekannter Barcode nachgeschlagen, gefundener Name: " . $productname, EVENT_TYPE_ADD_NEW_BARCODE, $barcode);
+            } else {
+                $log = new LogOutput("Name: " . $productname, EVENT_TYPE_ADD_NEW_BARCODE, $barcode);
+            }
             $output = $log
-                ->insertBarcodeInWebsocketText()
+                ->insertBarcodeInWebsocketText(isset($barcode))
                 ->setSendWebsocket($websocketEnabled)
-                ->setCustomWebsocketText($productname["name"])
+                ->setCustomWebsocketText($productname)
                 ->setWebsocketResultCode(WS_RESULT_PRODUCT_LOOKED_UP)
                 ->createLog();
         } else {
