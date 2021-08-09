@@ -222,13 +222,13 @@ $CONFIG->checkIfAuthenticated(true);
             text-decoration: none;
             font: bold 1em jost-bold;
             font-size: 36px;
-            color: #818181;
+            color: #efefef;
             display: block;
             transition: 0.2s;
         }
 
         .overlay a:hover, .overlay a:focus {
-            color: #f1f1f1;
+            color: #ffffff;
         }
 
         .overlay .closebtn {
@@ -343,6 +343,9 @@ $CONFIG->checkIfAuthenticated(true);
     function sendBarcode(barcode) {
         var xhttp = new XMLHttpRequest();
         xhttp.open("GET", "./api/action/scan?add=" + barcode, true);
+        xhttp.send();
+        xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "http://localhost:1234/info_transaction_state_changed?barcode=" + barcode, true);
         xhttp.send();
         closeNav();
     }
