@@ -117,12 +117,6 @@ function processNewProductName(string $text, bool $createProduct = false): strin
         processUnknownBarcode(null, $text, true, $lockGenerator, null, null);
         return "success";
     }
-    if ($db->isUnknownProductNameAlreadyStored(ucfirst($text))) {
-        $lockGenerator = new LockGenerator();
-        $lockGenerator->createLock();
-        processUnknownBarcode(null, ucfirst($text), true, $lockGenerator, null, null);
-        return "success";
-    }
 
     $allProducts = API::getAllProducts();
     if (!isset($allProducts)) return "products could not be loaded";
@@ -162,8 +156,8 @@ function processNewProductName(string $text, bool $createProduct = false): strin
     } else {
         if ($db->getTransactionState() == STATE_PURCHASE) {
             $createNewProduct = [
-                "name" => "Neues Produkt erstellen: " . ucfirst($text),
-                "sent_product_name" => ucfirst($text),
+                "name" => "Neues Produkt erstellen: " . $text,
+                "sent_product_name" => $text,
                 "id" => -1
             ];
             array_unshift($results, $createNewProduct);
