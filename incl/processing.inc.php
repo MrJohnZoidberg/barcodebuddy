@@ -107,11 +107,13 @@ function processNewProductName(string $text, bool $createProduct = false): strin
     if ($createProduct || $db->isUnknownProductNameAlreadyStored($text)) {
         $lockGenerator = new LockGenerator();
         $lockGenerator->createLock();
+        //$db->saveLastBarcode($sanitizedBarcode);
         processUnknownBarcode(null, $text, true, $lockGenerator, null, null);
         return "success";
     } else if ($db->isUnknownProductNameAlreadyStored(ucfirst($text))) {
         $lockGenerator = new LockGenerator();
         $lockGenerator->createLock();
+        //$db->saveLastBarcode($sanitizedBarcode);
         processUnknownBarcode(null, ucfirst($text), true, $lockGenerator, null, null);
         return "success";
     }
@@ -135,8 +137,8 @@ function processNewProductName(string $text, bool $createProduct = false): strin
             return "success";
         }
     }
-    $barcodesNnown = $db->getStoredBarcodes()["known"];
-    foreach ($barcodesNnown as $item) {
+    $barcodesKnown = $db->getStoredBarcodes()["known"];
+    foreach ($barcodesKnown as $item) {
         if ($item["barcode"] != "N/A") continue;
         $productNamesIds[] = [
             "name" => $item['name'],
