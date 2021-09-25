@@ -25,60 +25,61 @@
  */
 
 require_once __DIR__ . '/../configProcessing.inc.php';
-require_once __DIR__ . '/../websocketconnection.inc.php';
 require_once __DIR__ . '/../processing.inc.php';
 
-//Send result of a barcode entry
-function sendWSResult($resultValue, $name) {
-    global $CONFIG;
-    $client = getClient();
-    if ($client->connect('127.0.0.1', $CONFIG->PORT_WEBSOCKET_SERVER, '/screen')) {
-        $payload = json_encode(array(
-            'action' => 'echo',
-            'data'   => $resultValue . $name
-        ));
-        $client->sendData($payload);
-    }
-}
 
-function requestSavedState() {
-    global $CONFIG;
-    $client = getClient();
-    if ($client->connect('127.0.0.1', $CONFIG->PORT_WEBSOCKET_SERVER, '/screen')) {
-        $payload = json_encode(array(
-            'action' => 'getmode',
-            'data'   => ''
-        ));
-        $client->sendData($payload);
-    }
-}
+class SocketClient {
+    private $address;
+    private $port;
+    private $socket;
 
-//Send current Barcode Buddy state
-function sendNewState($newState) {
-    global $CONFIG;
-    $client = getClient();
-    if ($client->connect('127.0.0.1', $CONFIG->PORT_WEBSOCKET_SERVER, '/screen')) {
-        $payload = json_encode(array(
-            'action' => 'setmode',
-            'data'   => stateToString($newState)
-        ));
-        $client->sendData($payload);
+    public function __construct(string $address, int $port) {
+        $this->address = $address;
+        $this->port    = $port;
     }
-}
 
-function sendProductsList($products) {
-    global $CONFIG;
-    $client = getClient();
-    if ($client->connect('127.0.0.1', $CONFIG->PORT_WEBSOCKET_SERVER, '/screen')) {
-        $payload = json_encode(array(
-            'action' => 'chooseproducts',
-            'data'   => '5' . json_encode($products)
-        ));
-        $client->sendData($payload);
+    public function connect(): bool {
+        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        if ($this->socket === false) {
+            return false;
+        }
+        if (@socket_connect($this->socket, $this->address, $this->port) === false) {
+            return false;
+        }
+        return true;
     }
-}
 
-function getClient() {
-    require_once __DIR__ . '/php-websocket/src/Client.php';
-    return new \Bloatless\WebSocket\Client;
+    public function sendData(string $data): void {
+        socket_write($this->socket, $data, strlen($data));
+    }
+
+    /**
+     * @return false|string
+     */
+    public function readData() {
+        socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 60, "usec" => 0));
+        return socket_read($this->socket, 2048);
+    }
+
+    public function close(): void {
+        socket_close($this->socket);
+    }
+
+
+    public function getLastError(): string {
+        return socket_strerror(socket_last_error());
+    }
+
+    function sendProductsList($products) {
+        global $CONFIG;
+        $client = getClient();
+        if ($client->connect('127.0.0.1', $CONFIG->PORT_WEBSOCKET_SERVER, '/screen')) {
+            $payload = json_encode(array(
+                'action' => 'chooseproducts',
+                'data'   => '5' . json_encode($products)
+            ));
+            $client->sendData($payload);
+        }
+    }
+
 }

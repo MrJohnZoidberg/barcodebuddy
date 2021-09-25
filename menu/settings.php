@@ -19,8 +19,7 @@ require_once __DIR__ . "/../incl/configProcessing.inc.php";
 require_once __DIR__ . "/../incl/api.inc.php";
 require_once __DIR__ . "/../incl/db.inc.php";
 require_once __DIR__ . "/../incl/processing.inc.php";
-require_once __DIR__ . "/../incl/websocketconnection.inc.php";
-require_once __DIR__ . "/../incl/sse/websocket_client.php";
+require_once __DIR__ . "/../incl/websocket/client_internal.php";
 require_once __DIR__ . "/../incl/webui.inc.php";
 require_once __DIR__ . "/../incl/config.inc.php";
 
@@ -50,8 +49,10 @@ $webUi->printHtml();
 /**
  * Called when settings were saved. For each input, the setting
  * is saved as a database entry
+ *
+ * @return void
  */
-function saveSettings() {
+function saveSettings(): void {
     $db     = DatabaseConnection::getInstance();
     $config = BBConfig::getInstance();
     foreach ($config as $key => $value) {
@@ -229,7 +230,7 @@ function getProviderListItems(UiEditor $html): array {
     $bbServerSubtitle                    = "Uses " . BarcodeFederation::HOST_READABLE;
     if (!$config["BBUDDY_SERVER_ENABLED"])
         $bbServerSubtitle = "Enable Federation for this feature";
-    $result["id" . LOOKUP_ID_Federation] = $html->addListItem($html->addCheckbox('LOOKUP_USE_BBUDDY_SERVER', 'Barcode Buddy Federation', $config["LOOKUP_USE_BBUDDY_SERVER"], !$config["BBUDDY_SERVER_ENABLED"], false, true), $bbServerSubtitle, LOOKUP_ID_Federation, true);
+    $result["id" . LOOKUP_ID_FEDERATION] = $html->addListItem($html->addCheckbox('LOOKUP_USE_BBUDDY_SERVER', 'Barcode Buddy Federation', $config["LOOKUP_USE_BBUDDY_SERVER"], !$config["BBUDDY_SERVER_ENABLED"], false, true), $bbServerSubtitle, LOOKUP_ID_FEDERATION, true);
     return $result;
 }
 
@@ -247,7 +248,7 @@ function checkGrocyConnection(): string {
     }
 }
 
-function checkRedisConnection(UiEditor &$html) {
+function checkRedisConnection(UiEditor &$html): void {
     $error = null;
     try {
         $connected = RedisConnection::ping();
@@ -272,11 +273,11 @@ function checkRedisConnection(UiEditor &$html) {
  */
 function getHtmlSettingsWebsockets(): string {
     global $CONFIG;
-    $sp = websocket_open('localhost', $CONFIG->PORT_WEBSOCKET_SERVER, '', $errorstr, 5);
-    if ($sp !== false) {
+    $client = new SocketClient('127.0.0.1', $CONFIG->PORT_WEBSOCKET_SERVER);
+    if ($client->connect() !== false) {
         return '<span style="color:green">Websocket server is running.</span>';
     } else {
-        return '<span style="color:red">Websocket server is not running! ' . $errorstr . '</span>';
+        return '<span style="color:red">Websocket server is not running! ' . $client->getLastError() . '</span>';
     }
 }
 

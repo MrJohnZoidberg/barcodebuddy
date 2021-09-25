@@ -25,25 +25,57 @@
  */
 
 require_once __DIR__ . "/internalChecking.inc.php";
+require_once __DIR__ . "/websocket/client_internal.php";
 
-function sendWebsocketMessage($resultText, $resultCode = "0") {
-    require_once __DIR__ . "/websocket/client_internal.php";
-    sendWSResult($resultCode, $resultText);
+class SocketConnection {
+
+    /**
+     * Requests the current consumption state
+     *
+     * @return void
+     */
+    public static function requestCurrentState(): void {
+        $client = SocketConnection::getClient();
+        if ($client->connect()) {
+            $client->sendData('0 ');
+            $client->close();
+        }
+    }
+
+    /**
+     * Send current Barcode Buddy state
+     *
+     * @param int $newState Identifier of BB state
+     *
+     * @return void
+     */
+    public static function sendWebsocketStateChange(int $newState): void {
+        $client = SocketConnection::getClient();
+        if ($client->connect()) {
+            $client->sendData('1' . stateToString($newState));
+            $client->close();
+        }
+    }
+
+    /**Send result of a barcode entry
+     * @param int $resultValue
+     * @param string $text
+     */
+    public static function sendWebsocketMessage(int $resultValue, string $text): void {
+        $client = SocketConnection::getClient();
+        if ($client->connect()) {
+            $client->sendData('2' . $resultValue . $text);
+            $client->close();
+        }
+    }
+
+    private static function getClient(): SocketClient {
+        global $CONFIG;
+        return new SocketClient('127.0.0.1', $CONFIG->PORT_WEBSOCKET_SERVER);
+    }
+
+    function sendProductsListForChoosing($products) {
+        require_once __DIR__ . "/websocket/client_internal.php";
+        sendProductsList($products);
+    }
 }
-
-
-function requestCurrentState() {
-    require_once __DIR__ . "/websocket/client_internal.php";
-    requestSavedState();
-}
-
-function sendWebsocketStateChange($newState) {
-    require_once __DIR__ . "/websocket/client_internal.php";
-    sendNewState($newState);
-}
-
-function sendProductsListForChoosing($products) {
-    require_once __DIR__ . "/websocket/client_internal.php";
-    sendProductsList($products);
-}
-

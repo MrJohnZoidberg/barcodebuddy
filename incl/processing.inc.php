@@ -23,6 +23,7 @@ require_once __DIR__ . "/lockGenerator.inc.php";
 require_once __DIR__ . "/db.inc.php";
 require_once __DIR__ . "/config.inc.php";
 require_once __DIR__ . "/lookupProviders/BarcodeLookup.class.php";
+require_once __DIR__ . "/modules/choreManager.php";
 
 /**
  *
@@ -68,7 +69,7 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
     }
     if (stringStartsWith($barcode, $config["BARCODE_Q"])) {
         $quantity = str_replace($config["BARCODE_Q"], "", $barcode);
-        checkIfNumeric($quantity);
+        $quantity = checkIfNumeric($quantity);
         if ($config["LAST_PRODUCT"] != null) {
             $lastBarcode = $config["LAST_BARCODE"] . " (" . $config["LAST_PRODUCT"] . ")";
         } else {
@@ -78,6 +79,7 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
         $log = new LogOutput("Set quantity to $quantity for barcode $lastBarcode", EVENT_TYPE_MODE_CHANGE);
         return $log->setVerbose()->createLog();
     }
+
     if (trim($barcode) == "") {
         $log = new LogOutput("Invalid barcode found", EVENT_TYPE_ERROR);
         return $log->setVerbose()->setWebsocketResultCode(WS_RESULT_PRODUCT_UNKNOWN)->createLog();
@@ -242,13 +244,17 @@ const WS_RESULT_ERROR             = 'E';
 
 /**
  * Execute a chore when chore barcode was submitted
- * @param string $barcode
+ * @param string $barcode Barcode
  * @return mixed
  * @throws DbConnectionDuringEstablishException
  */
 function processChoreBarcode(string $barcode) {
-    $id = ChoreManager::getChoreBarcode(sanitizeString($barcode))['choreId'];
-    checkIfNumeric($id);
+    if (ChoreManager::isGrocyCode($barcode))
+        $id = ChoreManager::getIdFromGrocyCode($barcode);
+    else
+        $id = ChoreManager::getChoreBarcode(sanitizeString($barcode))['choreId'];
+
+    $id = checkIfNumeric($id);
     API::executeChore($id);
     return sanitizeString(API::getChoreInfo($id)["name"]);
 }
@@ -350,13 +356,13 @@ function processUnknownBarcode(?string $barcode, ?string $productname, bool $web
  */
 function stateToString(int $state): string {
     $allowedModes = array(
-        STATE_CONSUME         => "Verbrauchen",
+        STATE_CONSUME => "Verbrauchen",
         STATE_CONSUME_SPOILED => "Verbrauchen (verdorben)",
-        STATE_CONSUME_ALL     => "Alle verbrauchen",
-        STATE_PURCHASE        => "Einkaufen",
-        STATE_OPEN            => "Öffnen",
-        STATE_GETSTOCK        => "Bestand anzeigen",
-        STATE_ADD_SL          => "Zur Einkaufsliste hinzufügen"
+        STATE_CONSUME_ALL => "Alle verbrauchen",
+        STATE_PURCHASE => "Einkaufen",
+        STATE_OPEN => "Öffnen",
+        STATE_GETSTOCK => "Bestand anzeigen",
+        STATE_ADD_SL => "Zur Einkaufsliste hinzufügen"
     );
     return $allowedModes[$state];
 }
@@ -366,7 +372,7 @@ function changeWeightTareItem(string $barcode, int $newWeight): bool {
     if ($product == null)
         return false;
 
-    if (($product->stockAmount + $product->tareWeight) == $newWeight) {
+    if ((intval($product->stockAmount) + $product->tareWeight) == $newWeight) {
         $log = new LogOutput("Weight unchanged for: " . $product->name, EVENT_TYPE_ACTION_REQUIRED);
         $log->setVerbose()->dontSendWebsocket()->createLog();
         return true;
@@ -389,10 +395,14 @@ function changeWeightTareItem(string $barcode, int $newWeight): bool {
 
 /**
  * Change mode if it was supplied by GET parameter
+ *
  * @param string $modeParameter
+ *
+ * @return void
  * @throws DbConnectionDuringEstablishException
+ *
  */
-function processModeChangeGetParameter(string $modeParameter) {
+function processModeChangeGetParameter(string $modeParameter): void {
     $db = DatabaseConnection::getInstance();
     switch (trim($modeParameter)) {
         case "consume":
@@ -419,10 +429,14 @@ function processModeChangeGetParameter(string $modeParameter) {
 
 /**
  * This will be called when a new grocy product is created from BB and the grocy tab is closed
+ *
  * @param string $barcode
+ *
+ * @return void
  * @throws DbConnectionDuringEstablishException
+ *
  */
-function processRefreshedBarcode(string $barcode) {
+function processRefreshedBarcode(string $barcode): void {
     RedisConnection::expireAllProductInfo();
     $productInfo = API::getLastCreatedProduct(5);
     if ($productInfo != null) {
@@ -624,9 +638,9 @@ function printSelections(string $selected, ?array $productinfo): string {
  * Sanitizes a string for database input
  * @param string|null $input
  * @param bool $strongFilter
- * @return mixed|null
+ * @return string|null
  */
-function sanitizeString(?string $input, bool $strongFilter = false) {
+function sanitizeString(?string $input, bool $strongFilter = false): ?string {
     if ($input == null)
         return null;
     if ($strongFilter) {
@@ -639,11 +653,13 @@ function sanitizeString(?string $input, bool $strongFilter = false) {
 /**
  * Terminates script if non numeric
  * @param string $input
+ * @return int Returns value as int if valid
  */
-function checkIfNumeric(string $input) {
-    if (!is_numeric($input)) {
+function checkIfNumeric(string $input): int {
+    if (!is_numeric($input) && $input != "") {
         die("Illegal input! " . sanitizeString($input) . " needs to be a number");
     }
+    return intval($input);
 }
 
 /**
@@ -683,10 +699,14 @@ function cleanNameForTagLookup(string $input): array {
 
 /**
  * If a quantity barcode was scanned, add the quantity and process further
+ *
  * @param int $amount
+ *
+ * @return void
  * @throws DbConnectionDuringEstablishException
+ *
  */
-function changeQuantityAfterScan(int $amount) {
+function changeQuantityAfterScan(int $amount): void {
     $config = BBConfig::getInstance();
 
     $db      = DatabaseConnection::getInstance();
@@ -733,9 +753,9 @@ function getAllTags(): array {
  * Sorts the tags by name
  * @param Tag $a
  * @param Tag $b
- * @return bool
+ * @return int
  */
-function sortTags(Tag $a, Tag $b): bool {
+function sortTags(Tag $a, Tag $b): int {
     return $a->compare($b);
 }
 
@@ -743,10 +763,10 @@ function sortTags(Tag $a, Tag $b): bool {
  * Sorts the chores by name
  * @param $a
  * @param $b
- * @return bool
+ * @return int
  */
-function sortChores($a, $b) {
-    return $a['name'] > $b['name'];
+function sortChores(array $a, array $b): int {
+    return strcmp($a['name'], $b['name']);
 }
 
 
@@ -804,18 +824,25 @@ function strrtrim(string $message, string $strip): string {
     return implode($strip, array_merge($lines, array($last)));
 }
 
-function generateRandomString($length = 30) {
-    return substr(str_shuffle(str_repeat($x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length / strlen($x)))), 1, $length);
+/**
+ * @param int $length
+ * @return string
+ */
+function generateRandomString(int $length = 30): string {
+    return substr(str_shuffle(str_repeat($x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', intval(ceil($length / strlen($x))))), 1, $length);
 }
 
-function getApiUrl($removeAfter): string {
+function getApiUrl(string $removeAfter): string {
     $protocol = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 
     $url = $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     return $requestedUrl = trim(substr($url, 0, strpos($url, $removeAfter))) . "api/";
 }
 
-function showErrorNotWritable($error = "DB Error") {
+/**
+ * @return never
+ */
+function showErrorNotWritable(string $error = "DB Error") {
     die($error . ": Database file cannot be created, as folder or database file is not writable. Please check your permissions.<br>
              Have a look at this link to find out how to do this:
              <a href='https://github.com/olab/Open-Labyrinth/wiki/How-do-I-make-files-and-folders-writable-for-the-web-server%3F'>" . "How do I make files and folders writable for the web server?</a>");
@@ -866,7 +893,7 @@ class LogOutput {
         return $this;
     }
 
-    public function addStockToText($amount): LogOutput {
+    public function addStockToText(int $amount): LogOutput {
         if (!BBConfig::getInstance()["SHOW_STOCK_ON_SCAN"])
             return $this;
         //Do not have "." at the beginning if last character was "!"
@@ -887,17 +914,20 @@ class LogOutput {
         return $this;
     }
 
-    public function setSendWebsocket($sendWebsocket): LogOutput {
+    public function setSendWebsocket(bool $sendWebsocket): LogOutput {
         $this->sendWebsocketMessage = $sendWebsocket;
         return $this;
     }
 
-    public function setWebsocketResultCode($code): LogOutput {
+    /**
+     * @param int $code
+     */
+    public function setWebsocketResultCode(int $code): LogOutput {
         $this->websocketResultCode = $code;
         return $this;
     }
 
-    public function setCustomWebsocketText($text): LogOutput {
+    public function setCustomWebsocketText(string $text): LogOutput {
         $this->websocketText = $text;
         return $this;
     }
@@ -916,7 +946,7 @@ class LogOutput {
 
         DatabaseConnection::getInstance()->saveLog($this->logText, $this->isVerbose, $this->isError);
         if ($this->sendWebsocketMessage) {
-            sendWebsocketMessage($this->websocketText, $this->websocketResultCode);
+            SocketConnection::sendWebsocketMessage($this->websocketResultCode, $this->websocketText);
         }
         if (in_array("EventReceiver", $LOADED_PLUGINS)) {
             pluginEventReceiver_processEvent($this->eventType, $this->logText);

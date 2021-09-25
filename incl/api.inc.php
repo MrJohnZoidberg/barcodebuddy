@@ -207,8 +207,10 @@ class API {
      * Open product with $id
      *
      * @param int productId
+     *
+     * @return void
      */
-    public static function openProduct(int $id) {
+    public static function openProduct(int $id): void {
 
         $data = json_encode(array(
             'amount' => "1"
@@ -369,13 +371,14 @@ class API {
 
 
     /**
-     *
      * Removes an item from the default shoppinglist
      *
      * @param int $productid
      * @param int $amount
+     *
+     * @return void
      */
-    public static function removeFromShoppinglist(int $productid, int $amount) {
+    public static function removeFromShoppinglist(int $productid, int $amount): void {
         $data = json_encode(array(
             'product_id'     => $productid,
             'product_amount' => $amount
@@ -392,13 +395,14 @@ class API {
 
 
     /**
-     *
      * Adds an item to the default shoppinglist
      *
      * @param int $productid
      * @param int $amount
+     *
+     * @return void
      */
-    public static function addToShoppinglist(int $productid, int $amount) {
+    public static function addToShoppinglist(int $productid, int $amount): void {
         $data = json_encode(array(
             'product_id'     => $productid,
             'product_amount' => $amount
@@ -420,6 +424,8 @@ class API {
      * @param int id
      * @param int amount
      * @param boolean set true if product was spoiled. Default: false
+     *
+     * @return void
      */
     public static function consumeProduct(int $id, int $amount, bool $spoiled = false) {
         if ($amount <= 0)
@@ -444,10 +450,13 @@ class API {
     /**
      * Sets barcode to a Grocy product (unlike in the old API, this does not
      * replace previous barcodes)
+     *
      * @param int product id
      * @param string  barcode to be set
+     *
+     * @return void
      */
-    public static function addBarcode(int $id, string $barcode) {
+    public static function addBarcode(int $id, string $barcode): void {
 
         $data = json_encode(array(
             "product_id" => $id,
@@ -466,9 +475,12 @@ class API {
 
     /**
      * Adds quantity information from grocy barcode
+     *
      * @param string $barcode Barcode to modify
      * @param int $quantity
      * @param bool $ignoreCache
+     *
+     * @return void
      */
     public static function addBarcodeQuantity(string $barcode, int $quantity, bool $ignoreCache = false) {
 
@@ -500,9 +512,12 @@ class API {
 
     /**
      * Delete quantity information from grocy barcode
+     *
      * @param string $id
+     *
+     * @return void
      */
-    public static function deleteBarcodeQuantity(string $id) {
+    public static function deleteBarcodeQuantity(string $id): void {
         $data = json_encode(array(
             "amount" => null
         ));
@@ -542,8 +557,7 @@ class API {
         if ($info == null)
             return 0;
         $days = $info->defaultBestBeforeDays;
-        checkIfNumeric($days);
-        return $days;
+        return checkIfNumeric($days);
     }
 
 
@@ -553,13 +567,35 @@ class API {
      * @param bool $ignoreCache Cache will be ignored if true
      * @return GrocyProduct|null Product info or null if barcode is not associated with a product
      */
-    public static function getProductByBarcode(string $barcode, $ignoreCache = false): ?GrocyProduct {
+    public static function getProductByBarcode(string $barcode, bool $ignoreCache = false): ?GrocyProduct {
+        $grocyCode = self::getProductIdFromGrocyCode($barcode);
+        if ($grocyCode != null)
+            return self::getProductInfo($grocyCode);
+        if (stringStartsWith($barcode, "GRCY:P:")) {
+            $id = str_replace("GRCY:P:", "", $barcode);
+            return self::getProductInfo(checkIfNumeric($id));
+        }
         $allBarcodes = self::getAllBarcodes($ignoreCache);
         if (!isset($allBarcodes[$barcode])) {
             return null;
         } else {
             return self::getProductInfo($allBarcodes[$barcode]["id"]);
         }
+    }
+
+    private static function getProductIdFromGrocyCode(string $barcode): ?int {
+        if (!stringStartsWith($barcode, "GRCY:P:"))
+            return null;
+        // regular grocycode
+        if (preg_match("/^GRCY:P:\d+$/", $barcode)) {
+            return checkIfNumeric(str_replace("GRCY:P:", "", $barcode));
+        }
+        // grocycode related to specific stock entry
+        if (preg_match("/^GRCY:P:\d+:.+$/", $barcode)) {
+            $idArray = explode(":", $barcode);
+            return checkIfNumeric($idArray[2]);
+        }
+        return null;
     }
 
 
@@ -592,7 +628,7 @@ class API {
         foreach ($curlResult as $item) {
             if (!isset($item["barcode"]) || !isset($item["product_id"]))
                 continue;
-            $barcode = strval($item["barcode"]);
+            $barcode                        = strval($item["barcode"]);
             $result[$barcode]["id"]         = $item["product_id"];
             $result[$barcode]["factor"]     = $item["amount"];
             $result[$barcode]["barcode_id"] = $item["id"];
@@ -675,9 +711,12 @@ class API {
 
     /**
      * Executes a Grocy chore
+     *
      * @param int $choreId
+     *
+     * @return void
      */
-    public static function executeChore(int $choreId) {
+    public static function executeChore(int $choreId): void {
 
         $url  = API_CHORE_EXECUTE . $choreId . "/execute";
         $data = json_encode(array(
@@ -697,8 +736,10 @@ class API {
     /**
      * @param Exception $e
      * @param string $errorMessage
+     *
+     * @return void
      */
-    public static function processError(Exception $e, string $errorMessage) {
+    public static function processError(Exception $e, string $errorMessage): void {
         $class = get_class($e);
         switch ($class) {
             case 'InvalidServerResponseException':
@@ -734,8 +775,10 @@ class API {
     /**
      * @param string $errorMessage
      * @param bool $isFatal
+     *
+     * @return void
      */
-    public static function logError(string $errorMessage, bool $isFatal = true) {
+    public static function logError(string $errorMessage, bool $isFatal = true): void {
         try {
             DatabaseConnection::getInstance()->saveError($errorMessage, $isFatal);
         } catch (DbConnectionDuringEstablishException $_) {
@@ -745,7 +788,10 @@ class API {
 
     /**
      * Runs a benchmark for debugging purposes
+     *
      * @param int $id Product ID of grocy product to benchmark
+     *
+     * @return never
      */
     public static function runBenchmark(int $id) {
         $randomBarcode = "rand" . rand(10, 10000);
@@ -772,7 +818,10 @@ class API {
         die();
     }
 
-    private static function benchmarkApiCall(string $apiCall, ...$param) {
+    /**
+     * @param int|string|true $param
+     */
+    private static function benchmarkApiCall(string $apiCall, ...$param): void {
         $timeStart = microtime(true);
         $name      = "$apiCall(";
         foreach ($param as $parameter) {

@@ -9,7 +9,7 @@
 - [Docker](https://github.com/Forceu/barcodebuddy-docker)
 - [Android](https://play.google.com/store/apps/details?id=de.bulling.barcodebuddyscanner)
 - [Kubernetes](https://git.sr.ht/~johnhamelink/k8s-barcodebuddy) *(Community support only)*
-- [Home Assistant](https://github.com/Forceu/barcodebuddy-homeassistant)
+- [Home Assistant](https://github.com/Forceu/barcodebuddy-homeassistant) *(Community support only)*
 
 ## About
 
@@ -45,16 +45,15 @@ If you are using a reverse proxy, please make sure to disable caching, see [docu
 
 ## Acknowledgments
 
-* Thanks to Bernd Bestel for creating the amazing [Grocy](https://github.com/grocy/grocy) Project!
+* Bernd Bestel for creating the [Grocy](https://github.com/grocy/grocy) Project
 * openfoodfacts.org/upcitemdb.com for providing the barcode lookup API
-* [PHP-Websocket](https://github.com/bloatless/php-websocket)
 * [PHP-Auth](https://github.com/delight-im/PHP-Auth)
 * [NoSleep.js](https://github.com/richtr/NoSleep.js)
 * [SortableJS](https://github.com/SortableJS/Sortable)
 
 ## License
 
-This project is licensed under the GNU GPL3 - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the AGPL3 - see the [LICENSE.md](LICENSE.md) file for details
 
 
 ## Donations

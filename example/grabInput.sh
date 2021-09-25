@@ -82,6 +82,7 @@ declare -A CODE_MAP_CHAR=( ["(KEY_0)"]="0" \
     ["(KEY_DOT)"]="." \
     ["(KEY_KPDOT)"]="." \
     ["(KEY_MINUS)"]="-" \
+    ["(KEY_KPMINUS)"]="-" \
     ["(KEY_SLASH)"]="-" \
     ["(KEY_ENTER)"]="KEY_ENTER" \
     ["(KEY_KPENTER)"]="KEY_ENTER" )
@@ -142,7 +143,7 @@ evtest --grab "$deviceToUse" | while read line; do
       enteredText+="$key"
     else
       echo "[ScannerConnection] Received: $enteredText"
-      if [[ "$enteredText" -eq "$SPECIAL_BARCODE" ]]; then
+      if [[ "$enteredText" == "$SPECIAL_BARCODE" ]]; then
         specialAction
       else
         if [[ $USE_CURL == false ]]; then

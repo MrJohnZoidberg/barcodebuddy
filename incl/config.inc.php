@@ -15,7 +15,7 @@ class BBConfig implements ArrayAccess, Iterator, Countable {
      *
      * @param $db DatabaseConnection
      */
-    private function __construct($db) {
+    private function __construct(DatabaseConnection $db) {
         global $CONFIG;
 
         $res = $db->getRawConfig();
@@ -45,12 +45,12 @@ class BBConfig implements ArrayAccess, Iterator, Countable {
      * If not available, and no instance is being created, a new connection will be established.
      * Otherwise (such as during an ongoing upgrade in this php instance) an error will be thrown
      *
-     * @param null|DatabaseConnection $db
+     * @param DatabaseConnection|null $db
      *
      * @return BBConfig
      * @throws DbConnectionDuringEstablishException
      */
-    static function getInstance($db = null) {
+    static function getInstance(DatabaseConnection $db = null): BBConfig {
         if (self::$_BBConfigInstance != null) {
             return self::$_BBConfigInstance;
         }
@@ -61,8 +61,10 @@ class BBConfig implements ArrayAccess, Iterator, Countable {
 
     /**
      * Force config to update from the DB
+     *
+     * @return void
      */
-    public static function forceRefresh() {
+    public static function forceRefresh(): void {
         self::$_BBConfigInstance = null;
     }
 
@@ -75,7 +77,7 @@ class BBConfig implements ArrayAccess, Iterator, Countable {
      *
      * @deprecated N.B. If called directly, this config change will NOT be persisted in the database.
      */
-    public function offsetSet($offset, $value) {
+    public function offsetSet($offset, $value): void {
         if (is_null($offset)) {
             $this->container[] = $value;
         } else {
@@ -89,7 +91,7 @@ class BBConfig implements ArrayAccess, Iterator, Countable {
      * @param string $offset
      * @return bool
      */
-    public function offsetExists($offset) {
+    public function offsetExists($offset): bool {
         return isset($this->container[$offset]);
     }
 
@@ -100,7 +102,7 @@ class BBConfig implements ArrayAccess, Iterator, Countable {
      *
      * * @deprecated N.B. If called directly, this config change will NOT be persisted in the database.
      */
-    public function offsetUnset($offset) {
+    public function offsetUnset($offset): void {
         unset($this->container[$offset]);
     }
 
@@ -110,11 +112,11 @@ class BBConfig implements ArrayAccess, Iterator, Countable {
      *
      * @return string|null
      */
-    public function offsetGet($offset) {
+    public function offsetGet($offset): ?string {
         return isset($this->container[$offset]) ? $this->container[$offset] : null;
     }
 
-    public function rewind() {
+    public function rewind(): void {
         reset($this->container);
     }
 
@@ -130,11 +132,11 @@ class BBConfig implements ArrayAccess, Iterator, Countable {
         return next($this->container);
     }
 
-    public function valid() {
+    public function valid(): bool {
         return $this->current() !== false;
     }
 
-    public function count() {
+    public function count(): int {
         return count($this->container);
     }
 
